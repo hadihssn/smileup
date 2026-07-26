@@ -7,6 +7,7 @@ import { Dentist } from "@/components/sections/Dentist";
 import { Testimonials } from "@/components/sections/Testimonials";
 import { ClinicInfo } from "@/components/sections/ClinicInfo";
 import { Booking } from "@/components/sections/Booking";
+import { Faq } from "@/components/sections/Faq";
 
 export default function Home() {
   return (
@@ -21,6 +22,7 @@ export default function Home() {
         <Testimonials />
         <ClinicInfo />
         <Booking />
+        <Faq />
       </main>
     </>
   );
