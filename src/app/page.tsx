@@ -6,6 +6,7 @@ import { Gallery } from "@/components/sections/Gallery";
 import { Dentist } from "@/components/sections/Dentist";
 import { Testimonials } from "@/components/sections/Testimonials";
 import { ClinicInfo } from "@/components/sections/ClinicInfo";
+import { Booking } from "@/components/sections/Booking";
 
 export default function Home() {
   return (
@@ -19,6 +20,7 @@ export default function Home() {
         <Dentist />
         <Testimonials />
         <ClinicInfo />
+        <Booking />
       </main>
     </>
   );
