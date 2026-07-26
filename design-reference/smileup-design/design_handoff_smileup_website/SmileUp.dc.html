@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" rel="stylesheet">
+  <style>
+    html { scroll-behavior: smooth; }
+    body { margin: 0; background: #FFFFFF; -webkit-font-smoothing: antialiased; }
+    * { box-sizing: border-box; }
+    a { color: #00B900; text-decoration: none; }
+    a:hover { color: #009600; }
+    ::selection { background: #00B900; color: #fff; }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes floatIn { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
+    [data-reveal] { opacity: 0; transform: translateY(32px); transition: opacity 0.8s cubic-bezier(0.16,1,0.3,1), transform 0.8s cubic-bezier(0.16,1,0.3,1); will-change: opacity, transform; }
+    [data-reveal].revealed { opacity: 1; transform: translateY(0); }
+    [data-reveal="scale"] { transform: scale(0.94); }
+    [data-reveal="scale"].revealed { transform: scale(1); }
+    [data-reveal="left"] { transform: translateX(-36px); }
+    [data-reveal="left"].revealed { transform: translateX(0); }
+    [data-reveal="right"] { transform: translateX(36px); }
+    [data-reveal="right"].revealed { transform: translateX(0); }
+  </style>
+</helmet>
+
+<div ref="{{ setRootRef }}" style="font-family:{{ bodyFont }}; color:#14201B; background:#FFFFFF; overflow-x:hidden; line-height:1.55;">
+
+  <!-- NAV -->
+  <nav style="position:sticky; top:0; z-index:50; background:rgba(255,255,255,0.92); backdrop-filter:blur(10px); border-bottom:1px solid #E4EAE6;">
+    <div style="max-width:1240px; margin:0 auto; padding:16px 24px; display:flex; align-items:center; justify-content:space-between; gap:16px;">
+      <a href="#top" style="display:flex; align-items:center; gap:10px; flex-shrink:0;">
+        <span style="width:36px; height:36px; border-radius:50%; background:#00B900; color:#fff; display:flex; align-items:center; justify-content:center; font-family:{{ headingFont }}; font-weight:700; font-size:17px;">S</span>
+        <span style="font-family:{{ headingFont }}; font-weight:700; font-size:20px; color:#14201B;">SmileUp</span>
+      </a>
+
+      <div style="display:{{ navRowDisplay }}; align-items:center; gap:28px;">
+        <a href="#why" style="font-size:15px; font-weight:500; color:#3B4A43;">Why Us</a>
+        <a href="#services" style="font-size:15px; font-weight:500; color:#3B4A43;">Services</a>
+        <a href="#gallery" style="font-size:15px; font-weight:500; color:#3B4A43;">Gallery</a>
+        <a href="#dentist" style="font-size:15px; font-weight:500; color:#3B4A43;">Dentist</a>
+        <a href="#testimonials" style="font-size:15px; font-weight:500; color:#3B4A43;">Reviews</a>
+        <a href="#contact" style="font-size:15px; font-weight:500; color:#3B4A43;">Contact</a>
+        <a href="#faq" style="font-size:15px; font-weight:500; color:#3B4A43;">FAQ</a>
+      </div>
+
+      <div style="display:flex; align-items:center; gap:12px;">
+        <a href="tel:+15551234567" style="display:{{ phoneDisplay }}; font-size:14px; font-weight:600; color:#14201B; white-space:nowrap;">+1 (555) 123-4567</a>
+        <a href="#book" style="background:#00B900; color:#fff; padding:11px 20px; border-radius:999px; font-size:14px; font-weight:600; white-space:nowrap; box-shadow:0 4px 14px rgba(0,185,0,0.28); transition:background 0.2s;" style-hover="background:#009600;">Book Appointment</a>
+        <button aria-label="Toggle menu" onClick="{{ toggleMobileMenu }}" style="display:{{ hamburgerDisplay }}; width:40px; height:40px; border-radius:10px; border:1px solid #E4EAE6; background:#fff; align-items:center; justify-content:center; cursor:pointer; flex-direction:column; gap:4px;">
+          <span style="width:18px; height:2px; background:#14201B; border-radius:2px;"></span>
+          <span style="width:18px; height:2px; background:#14201B; border-radius:2px;"></span>
+        </button>
+      </div>
+    </div>
+
+    <sc-if value="{{ mobileMenuOpen }}">
+      <div style="display:flex; flex-direction:column; padding:12px 24px 20px; gap:14px; border-top:1px solid #E4EAE6; background:#fff;">
+        <a href="#why" onClick="{{ closeMobileMenu }}" style="font-size:15px; font-weight:600; color:#14201B;">Why Us</a>
+        <a href="#services" onClick="{{ closeMobileMenu }}" style="font-size:15px; font-weight:600; color:#14201B;">Services</a>
+        <a href="#gallery" onClick="{{ closeMobileMenu }}" style="font-size:15px; font-weight:600; color:#14201B;">Gallery</a>
+        <a href="#dentist" onClick="{{ closeMobileMenu }}" style="font-size:15px; font-weight:600; color:#14201B;">Dentist</a>
+        <a href="#testimonials" onClick="{{ closeMobileMenu }}" style="font-size:15px; font-weight:600; color:#14201B;">Reviews</a>
+        <a href="#contact" onClick="{{ closeMobileMenu }}" style="font-size:15px; font-weight:600; color:#14201B;">Contact</a>
+        <a href="#faq" onClick="{{ closeMobileMenu }}" style="font-size:15px; font-weight:600; color:#14201B;">FAQ</a>
+        <a href="tel:+15551234567" style="font-size:15px; font-weight:600; color:#00B900;">+1 (555) 123-4567</a>
+      </div>
+    </sc-if>
+  </nav>
+
+  <!-- HERO -->
+  <section id="top" style="max-width:1240px; margin:0 auto; padding:clamp(48px,8vw,96px) 24px; display:flex; flex-wrap:wrap-reverse; align-items:center; gap:56px;">
+    <div style="flex:1 1 440px; min-width:320px; animation:fadeUp 0.7s ease both;">
+      <div style="display:inline-flex; align-items:center; gap:8px; background:#E3F9E3; color:#009600; padding:7px 14px; border-radius:999px; font-size:13px; font-weight:600; margin-bottom:20px;">
+        <span style="width:6px; height:6px; border-radius:50%; background:#00B900;"></span>
+        Now accepting new patients
+      </div>
+      <h1 style="font-family:{{ headingFont }}; font-size:clamp(2.4rem,4.5vw + 1rem,4rem); line-height:1.08; font-weight:700; letter-spacing:-0.02em; color:#14201B; margin:0 0 22px;">Your smile, elevated with expert care.</h1>
+      <p style="font-size:18px; color:#4B5B54; max-width:480px; margin:0 0 32px;">SmileUp pairs experienced dentistry with a calm, modern clinic experience — so every visit feels easy, comfortable, and worth smiling about.</p>
+      <div style="display:flex; flex-wrap:wrap; gap:14px;">
+        <a href="#book" style="background:#00B900; color:#fff; padding:16px 28px; border-radius:999px; font-size:16px; font-weight:600; box-shadow:0 8px 24px rgba(0,185,0,0.32); transition:transform 0.2s, background 0.2s;" style-hover="background:#009600; transform:translateY(-1px);">Book Appointment</a>
+        <a href="https://wa.me/15551234567" target="_blank" rel="noopener" style="display:flex; align-items:center; gap:10px; background:#fff; color:#00B900; padding:16px 26px; border-radius:999px; font-size:16px; font-weight:600; border:1.5px solid #00B900; transition:background 0.2s;" style-hover="background:#E3F9E3;">
+          <span style="width:20px; height:20px; border-radius:6px; background:#00B900; display:inline-flex; align-items:center; justify-content:center;">
+            <span style="width:10px; height:10px; border-radius:3px; background:#fff;"></span>
+          </span>
+          Chat on WhatsApp
+        </a>
+      </div>
+      <div ref="{{ statsRef }}" data-reveal="fade" style="display:flex; gap:32px; margin-top:44px; flex-wrap:wrap;">
+        <div>
+          <div style="font-family:{{ headingFont }}; font-size:28px; font-weight:700; color:#14201B;">{{ statYearsDisplay }}</div>
+          <div style="font-size:13px; color:#4B5B54;">Years experience</div>
+        </div>
+        <div>
+          <div style="font-family:{{ headingFont }}; font-size:28px; font-weight:700; color:#14201B;">{{ statPatientsDisplay }}</div>
+          <div style="font-size:13px; color:#4B5B54;">Happy patients</div>
+        </div>
+        <div>
+          <div style="font-family:{{ headingFont }}; font-size:28px; font-weight:700; color:#14201B;">{{ statRatingDisplay }}</div>
+          <div style="font-size:13px; color:#4B5B54;">Patient rating</div>
+        </div>
+      </div>
+    </div>
+    <div style="flex:1.3 1 420px; min-width:320px; position:relative; animation:floatIn 0.8s ease both;">
+      <div style="position:relative; aspect-ratio:4/5; border-radius:28px; overflow:hidden; background-image:url('https://images.unsplash.com/photo-1606811841689-23dfddce3e95?auto=format&fit=crop&w=1000&q=80'); background-size:cover; background-position:center; background-color:#E3F9E3; box-shadow:0 24px 60px rgba(0,150,0,0.2);">
+        <div style="position:absolute; bottom:20px; left:20px; right:20px; background:#fff; border-radius:16px; padding:16px 18px; display:flex; align-items:center; gap:12px; box-shadow:0 12px 28px rgba(0,0,0,0.14);">
+          <span style="width:40px; height:40px; border-radius:50%; background-image:url('https://images.unsplash.com/photo-1489980557514-251d61e3eeb6?auto=format&fit=crop&w=100&q=80'); background-size:cover; background-position:center; background-color:#E3F9E3; flex-shrink:0;"></span>
+          <div>
+            <div style="font-size:14px; font-weight:600; color:#14201B;">"Best dental experience I've had."</div>
+            <div style="font-size:12px; color:#4B5B54; margin-top:2px;">Amara O. — verified patient</div>
+          </div>
+        </div>
+      </div>
+      <div style="position:absolute; top:-28px; right:-24px; width:130px; height:130px; border-radius:20px; overflow:hidden; border:5px solid #fff; box-shadow:0 16px 36px rgba(0,0,0,0.16); background-image:url('https://images.unsplash.com/photo-1517842645767-c639042777db?auto=format&fit=crop&w=300&q=80'); background-size:cover; background-position:center; background-color:#E3F9E3; display:none;" class="hero-accent"></div>
+    </div>
+  </section>
+
+  <!-- OUR APPROACH / JOURNEY -->
+  <section id="why" style="background:#F2FBF2; padding:clamp(64px,8vw,110px) 24px;">
+    <div style="max-width:1240px; margin:0 auto;">
+      <div data-reveal="fade" style="display:flex; flex-wrap:wrap; gap:48px; align-items:flex-end; margin-bottom:56px;">
+        <div style="flex:2 1 420px; min-width:280px;">
+          <div style="font-size:13px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:#00B900; margin-bottom:12px;">Our Approach</div>
+          <h2 style="font-family:{{ headingFont }}; font-size:clamp(1.8rem,3vw + 1rem,2.6rem); font-weight:700; letter-spacing:-0.01em; color:#14201B; margin:0;">Every treatment starts with a conversation, not a drill.</h2>
+        </div>
+        <p style="flex:1 1 320px; min-width:260px; font-size:15.5px; color:#4B5B54; margin:0;">Most dental visits jump straight to treatment. At SmileUp, we slow down first — understanding your history, your anxieties, and your goals — so the plan we build actually fits your life, not just your teeth.</p>
+      </div>
+
+      <div style="position:relative; display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:28px;">
+        <div style="display:none;" class="journey-line"></div>
+        <sc-for list="{{ journeySteps }}" as="step" hint-placeholder-count="4">
+          <div data-reveal="fade" style="position:relative;">
+            <div style="width:56px; height:56px; border-radius:16px; background:#00B900; color:#fff; display:flex; align-items:center; justify-content:center; font-family:{{ headingFont }}; font-weight:700; font-size:20px; margin-bottom:22px; box-shadow:0 10px 26px rgba(0,150,0,0.28);">{{ step.n }}</div>
+            <h3 style="font-size:18px; font-weight:700; color:#14201B; margin:0 0 10px;">{{ step.title }}</h3>
+            <p style="font-size:14.5px; color:#4B5B54; margin:0;">{{ step.desc }}</p>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </section>
+
+  <!-- SERVICES -->
+  <section id="services" style="padding:clamp(64px,8vw,110px) 24px;">
+    <div style="max-width:1240px; margin:0 auto;">
+      <div style="display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:20px; margin-bottom:48px;">
+        <div data-reveal="fade" style="max-width:600px;">
+          <div style="font-size:13px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:#00B900; margin-bottom:12px;">Our Services</div>
+          <h2 style="font-family:{{ headingFont }}; font-size:clamp(1.8rem,3vw + 1rem,2.6rem); font-weight:700; letter-spacing:-0.01em; color:#14201B; margin:0;">Complete care, one clinic.</h2>
+        </div>
+        <a href="#book" style="font-size:15px; font-weight:600; color:#00B900; white-space:nowrap;">View all treatments →</a>
+      </div>
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:24px;">
+        <sc-for list="{{ services }}" as="s" hint-placeholder-count="8">
+          <div data-reveal="fade" style="background:#fff; border-radius:20px; padding:30px 26px; border:1px solid #E4EAE6; box-shadow:0 4px 16px rgba(20,32,27,0.03); transition:box-shadow 0.25s, transform 0.25s;" style-hover="box-shadow:0 16px 36px rgba(0,150,0,0.16); transform:translateY(-4px);">
+            <div style="width:48px; height:48px; border-radius:14px; background:#E3F9E3; color:#009600; display:flex; align-items:center; justify-content:center; font-family:{{ headingFont }}; font-weight:700; font-size:14px; margin-bottom:20px;">{{ s.code }}</div>
+            <h3 style="font-size:18px; font-weight:700; color:#14201B; margin:0 0 8px;">{{ s.title }}</h3>
+            <p style="font-size:14.5px; color:#4B5B54; margin:0;">{{ s.desc }}</p>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </section>
+
+  <!-- BEFORE & AFTER -->
+  <section id="gallery" style="background:#F2FBF2; padding:clamp(64px,8vw,110px) 24px;">
+    <div style="max-width:1240px; margin:0 auto;">
+      <div data-reveal="fade" style="max-width:600px; margin:0 0 48px;">
+        <div style="font-size:13px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:#00B900; margin-bottom:12px;">Real Results</div>
+        <h2 style="font-family:{{ headingFont }}; font-size:clamp(1.8rem,3vw + 1rem,2.6rem); font-weight:700; letter-spacing:-0.01em; color:#14201B; margin:0;">Before &amp; after transformations.</h2>
+      </div>
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:24px;">
+        <sc-for list="{{ gallery }}" as="g" hint-placeholder-count="4">
+          <div data-reveal="scale" style="background:#fff; border-radius:20px; overflow:hidden; border:1px solid #E4EAE6;">
+            <div style="display:grid; grid-template-columns:1fr 1fr;">
+              <div style="aspect-ratio:1; background-image:url({{ g.img }}); background-size:cover; background-position:center; background-color:#EEF3F0; filter:grayscale(1) contrast(0.9) brightness(0.95); display:flex; align-items:end; justify-content:center; padding-bottom:10px;">
+                <span style="font-family:monospace; font-size:11px; background:#fff; padding:4px 8px; border-radius:6px; color:#4B5B54;">before</span>
+              </div>
+              <div style="aspect-ratio:1; background-image:url({{ g.img }}); background-size:cover; background-position:center; background-color:#E3F9E3; display:flex; align-items:end; justify-content:center; padding-bottom:10px;">
+                <span style="font-family:monospace; font-size:11px; background:#fff; padding:4px 8px; border-radius:6px; color:#009600;">after</span>
+              </div>
+            </div>
+            <div style="padding:18px 20px;">
+              <h3 style="font-size:15.5px; font-weight:700; color:#14201B; margin:0 0 4px;">{{ g.title }}</h3>
+              <p style="font-size:13.5px; color:#4B5B54; margin:0;">{{ g.desc }}</p>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </section>
+
+  <!-- MEET THE DENTIST -->
+  <section id="dentist" style="padding:clamp(64px,8vw,110px) 24px;">
+    <div style="max-width:1240px; margin:0 auto; display:flex; flex-wrap:wrap; gap:56px; align-items:center;">
+      <div data-reveal="left" style="flex:1 1 320px; min-width:280px; max-width:400px;">
+        <div style="aspect-ratio:3/4; border-radius:24px; background-image:url('https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=800&q=80'); background-size:cover; background-position:center; background-color:#E3F9E3; box-shadow:0 20px 50px rgba(0,150,0,0.18);"></div>
+      </div>
+      <div data-reveal="right" style="flex:1 1 380px; min-width:300px;">
+        <div style="font-size:13px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:#00B900; margin-bottom:12px;">Meet Your Dentist</div>
+        <h2 style="font-family:{{ headingFont }}; font-size:clamp(1.8rem,3vw + 1rem,2.4rem); font-weight:700; letter-spacing:-0.01em; color:#14201B; margin:0 0 18px;">Dr. Saad Aftab</h2>
+        <p style="font-size:16px; color:#4B5B54; margin:0 0 24px; max-width:520px;">Dr. Aftab has spent over a decade helping patients love their smiles again — blending precise clinical technique with a genuinely warm chairside manner. He believes great dentistry should feel unhurried, transparent, and painless.</p>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:16px; margin-bottom:24px;">
+          <div style="border:1px solid #E4EAE6; border-radius:14px; padding:16px 18px;">
+            <div style="font-size:12.5px; color:#4B5B54; margin-bottom:4px;">Qualification</div>
+            <div style="font-size:14.5px; font-weight:700; color:#14201B;">BDS, MDS (Prosthodontics)</div>
+          </div>
+          <div style="border:1px solid #E4EAE6; border-radius:14px; padding:16px 18px;">
+            <div style="font-size:12.5px; color:#4B5B54; margin-bottom:4px;">Experience</div>
+            <div style="font-size:14.5px; font-weight:700; color:#14201B;">12+ years in practice</div>
+          </div>
+          <div style="border:1px solid #E4EAE6; border-radius:14px; padding:16px 18px;">
+            <div style="font-size:12.5px; color:#4B5B54; margin-bottom:4px;">Focus</div>
+            <div style="font-size:14.5px; font-weight:700; color:#14201B;">Implants &amp; Cosmetic Dentistry</div>
+          </div>
+        </div>
+        <a href="#book" style="display:inline-block; background:#00B900; color:#fff; padding:14px 26px; border-radius:999px; font-size:15px; font-weight:600;" style-hover="background:#009600;">Book with Dr. Aftab</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- TESTIMONIALS -->
+  <section id="testimonials" style="background:#F2FBF2; padding:clamp(64px,8vw,110px) 24px;">
+    <div style="max-width:1240px; margin:0 auto;">
+      <div data-reveal="fade" style="max-width:600px; margin:0 0 48px;">
+        <div style="font-size:13px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:#00B900; margin-bottom:12px;">Patient Stories</div>
+        <h2 style="font-family:{{ headingFont }}; font-size:clamp(1.8rem,3vw + 1rem,2.6rem); font-weight:700; letter-spacing:-0.01em; color:#14201B; margin:0;">Loved by our patients.</h2>
+      </div>
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:24px;">
+        <sc-for list="{{ testimonials }}" as="t" hint-placeholder-count="4">
+          <div data-reveal="fade" style="background:#fff; border-radius:20px; padding:28px 26px; border:1px solid #E4EAE6;">
+            <div style="color:#00B900; font-size:15px; letter-spacing:2px; margin-bottom:14px;">{{ t.stars }}</div>
+            <p style="font-size:15px; color:#2C3A34; margin:0 0 20px;">"{{ t.quote }}"</p>
+            <div style="display:flex; align-items:center; gap:12px;">
+              <span style="width:38px; height:38px; border-radius:50%; background-image:url({{ t.avatar }}); background-size:cover; background-position:center; background-color:#E3F9E3; flex-shrink:0;"></span>
+              <div>
+                <div style="font-size:14px; font-weight:700; color:#14201B;">{{ t.name }}</div>
+                <div style="font-size:12.5px; color:#4B5B54;">{{ t.location }}</div>
+              </div>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </section>
+
+  <!-- CLINIC INFO -->
+  <section id="contact" style="padding:clamp(64px,8vw,110px) 24px;">
+    <div style="max-width:1240px; margin:0 auto; display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:40px; align-items:stretch;">
+      <div data-reveal="left">
+        <div style="font-size:13px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:#00B900; margin-bottom:12px;">Visit Us</div>
+        <h2 style="font-family:{{ headingFont }}; font-size:clamp(1.8rem,3vw + 1rem,2.4rem); font-weight:700; letter-spacing:-0.01em; color:#14201B; margin:0 0 24px;">Clinic Information</h2>
+        <div style="display:flex; flex-direction:column; gap:20px;">
+          <div>
+            <div style="font-size:12.5px; color:#4B5B54; margin-bottom:4px;">Address</div>
+            <div style="font-size:15.5px; font-weight:600; color:#14201B;">221 Maple Grove Ave, Suite 4, Springfield</div>
+          </div>
+          <div>
+            <div style="font-size:12.5px; color:#4B5B54; margin-bottom:4px;">Phone</div>
+            <a href="tel:+15551234567" style="font-size:15.5px; font-weight:600; color:#14201B;">+1 (555) 123-4567</a>
+          </div>
+          <div>
+            <div style="font-size:12.5px; color:#4B5B54; margin-bottom:4px;">WhatsApp</div>
+            <a href="https://wa.me/15551234567" target="_blank" rel="noopener" style="font-size:15.5px; font-weight:600; color:#00B900;">Message us directly →</a>
+          </div>
+          <div>
+            <div style="font-size:12.5px; color:#4B5B54; margin-bottom:4px;">Email</div>
+            <a href="mailto:hello@smileup.clinic" style="font-size:15.5px; font-weight:600; color:#14201B;">hello@smileup.clinic</a>
+          </div>
+          <div>
+            <div style="font-size:12.5px; color:#4B5B54; margin-bottom:10px;">Opening Hours</div>
+            <div style="display:flex; flex-direction:column; max-width:340px;">
+              <sc-for list="{{ hours }}" as="h" hint-placeholder-count="7">
+                <div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid #E4EAE6; font-size:14px;">
+                  <span style="font-weight:700; letter-spacing:0.04em; text-transform:uppercase; color:#14201B;">{{ h.day }}</span>
+                  <span style="color:#4B5B54;">{{ h.time }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-reveal="right" style="border-radius:20px; overflow:hidden; min-height:320px; border:1px solid #E4EAE6;">
+        <iframe title="Clinic location map" src="https://www.google.com/maps?q=Springfield&output=embed" style="width:100%; height:100%; min-height:320px; border:0;" loading="lazy"></iframe>
+      </div>
+    </div>
+  </section>
+
+  <!-- APPOINTMENT CTA FORM -->
+  <section id="book" style="background:#00B900; padding:clamp(64px,8vw,110px) 24px;">
+    <div style="max-width:1240px; margin:0 auto; display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:48px; align-items:center;">
+      <div data-reveal="left">
+        <div style="font-size:13px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:#DFFFDF; margin-bottom:12px;">Book Now</div>
+        <h2 style="font-family:{{ headingFont }}; font-size:clamp(1.8rem,3vw + 1rem,2.6rem); font-weight:700; letter-spacing:-0.01em; color:#fff; margin:0 0 16px;">Let's get your smile started.</h2>
+        <p style="font-size:16px; color:#E5FFE5; max-width:420px; margin:0;">Fill in your details and our team will confirm your appointment within one business day.</p>
+      </div>
+      <form data-reveal="right" onSubmit="{{ handleSubmit }}" style="background:#fff; border-radius:24px; padding:32px; display:flex; flex-direction:column; gap:16px; box-shadow:0 24px 60px rgba(0,0,0,0.2);">
+        <sc-if value="{{ formSubmitted }}" hint-placeholder-val="{{ false }}">
+          <div style="text-align:center; padding:24px 8px;">
+            <div style="font-size:32px; margin-bottom:8px;">✓</div>
+            <h3 style="font-size:18px; font-weight:700; color:#14201B; margin:0 0 8px;">Request received!</h3>
+            <p style="font-size:14.5px; color:#4B5B54; margin:0;">We'll call or WhatsApp you shortly to confirm.</p>
+          </div>
+        </sc-if>
+        <sc-if value="{{ formNotSubmitted }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex; flex-direction:column; gap:16px;">
+            <div>
+              <label style="font-size:13px; font-weight:600; color:#14201B; display:block; margin-bottom:6px;">Full Name</label>
+              <input type="text" required="{{ true }}" value="{{ formData.name }}" onChange="{{ updateField_name }}" placeholder="Jane Doe" style="width:100%; padding:12px 14px; border-radius:10px; border:1px solid #E4EAE6; font-size:14.5px; font-family:inherit;" />
+            </div>
+            <div>
+              <label style="font-size:13px; font-weight:600; color:#14201B; display:block; margin-bottom:6px;">Phone Number</label>
+              <input type="tel" required="{{ true }}" value="{{ formData.phone }}" onChange="{{ updateField_phone }}" placeholder="+1 555 000 0000" style="width:100%; padding:12px 14px; border-radius:10px; border:1px solid #E4EAE6; font-size:14.5px; font-family:inherit;" />
+            </div>
+            <div>
+              <label style="font-size:13px; font-weight:600; color:#14201B; display:block; margin-bottom:6px;">Treatment</label>
+              <select value="{{ formData.treatment }}" onChange="{{ updateField_treatment }}" style="width:100%; padding:12px 14px; border-radius:10px; border:1px solid #E4EAE6; font-size:14.5px; font-family:inherit; background:#fff;">
+                <option value="">Select a treatment</option>
+                <sc-for list="{{ services }}" as="s" hint-placeholder-count="8">
+                  <option value="{{ s.title }}">{{ s.title }}</option>
+                </sc-for>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:13px; font-weight:600; color:#14201B; display:block; margin-bottom:6px;">Preferred Date</label>
+              <input type="date" value="{{ formData.date }}" onChange="{{ updateField_date }}" style="width:100%; padding:12px 14px; border-radius:10px; border:1px solid #E4EAE6; font-size:14.5px; font-family:inherit;" />
+            </div>
+            <div>
+              <label style="font-size:13px; font-weight:600; color:#14201B; display:block; margin-bottom:6px;">Message (optional)</label>
+              <textarea value="{{ formData.message }}" onChange="{{ updateField_message }}" placeholder="Anything we should know?" rows="3" style="width:100%; padding:12px 14px; border-radius:10px; border:1px solid #E4EAE6; font-size:14.5px; font-family:inherit; resize:vertical;"></textarea>
+            </div>
+            <button type="submit" style="background:#00B900; color:#fff; border:none; padding:15px 20px; border-radius:12px; font-size:15.5px; font-weight:700; cursor:pointer; margin-top:4px;" style-hover="background:#009600;">Request Appointment</button>
+          </div>
+        </sc-if>
+      </form>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section id="faq" style="padding:clamp(64px,8vw,110px) 24px;">
+    <div style="max-width:800px; margin:0 auto;">
+      <div data-reveal="fade" style="text-align:center; margin-bottom:48px;">
+        <div style="font-size:13px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:#00B900; margin-bottom:12px;">FAQ</div>
+        <h2 style="font-family:{{ headingFont }}; font-size:clamp(1.8rem,3vw + 1rem,2.4rem); font-weight:700; letter-spacing:-0.01em; color:#14201B; margin:0;">Common questions.</h2>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:12px;">
+        <sc-for list="{{ faqItemsWithState }}" as="f" hint-placeholder-count="6">
+          <div data-reveal="fade" style="border:1px solid #E4EAE6; border-radius:16px; overflow:hidden; background:#fff;">
+            <button onClick="{{ f.toggle }}" style="width:100%; text-align:left; background:none; border:none; padding:20px 22px; display:flex; justify-content:space-between; align-items:center; cursor:pointer; font-family:inherit;">
+              <span style="font-size:15.5px; font-weight:600; color:#14201B;">{{ f.q }}</span>
+              <span style="font-size:20px; color:#00B900; flex-shrink:0; margin-left:16px;">{{ f.symbol }}</span>
+            </button>
+            <sc-if value="{{ f.open }}">
+              <div style="padding:0 22px 20px; font-size:14.5px; color:#4B5B54;">{{ f.a }}</div>
+            </sc-if>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer style="background:#0D1F0D; padding:64px 24px 32px;">
+    <div style="max-width:1240px; margin:0 auto;">
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:40px; margin-bottom:48px;">
+        <div>
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
+            <span style="width:32px; height:32px; border-radius:50%; background:#00B900; color:#fff; display:flex; align-items:center; justify-content:center; font-family:{{ headingFont }}; font-weight:700; font-size:15px;">S</span>
+            <span style="font-family:{{ headingFont }}; font-weight:700; font-size:18px; color:#fff;">SmileUp</span>
+          </div>
+          <p style="font-size:13.5px; color:#8FC08F; max-width:220px; margin:0;">Premium dental care that puts your comfort first.</p>
+        </div>
+        <div>
+          <div style="font-size:13px; font-weight:700; color:#fff; margin-bottom:16px;">Navigate</div>
+          <div style="display:flex; flex-direction:column; gap:10px;">
+            <a href="#why" style="font-size:13.5px; color:#8FC08F;">Why Us</a>
+            <a href="#services" style="font-size:13.5px; color:#8FC08F;">Services</a>
+            <a href="#gallery" style="font-size:13.5px; color:#8FC08F;">Gallery</a>
+            <a href="#testimonials" style="font-size:13.5px; color:#8FC08F;">Reviews</a>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:13px; font-weight:700; color:#fff; margin-bottom:16px;">Contact</div>
+          <div style="display:flex; flex-direction:column; gap:10px;">
+            <a href="tel:+15551234567" style="font-size:13.5px; color:#8FC08F;">+1 (555) 123-4567</a>
+            <a href="mailto:hello@smileup.clinic" style="font-size:13.5px; color:#8FC08F;">hello@smileup.clinic</a>
+            <a href="#contact" style="font-size:13.5px; color:#8FC08F;">221 Maple Grove Ave</a>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:13px; font-weight:700; color:#fff; margin-bottom:16px;">Follow</div>
+          <div style="display:flex; gap:12px;">
+            <a href="#" aria-label="Instagram" style="width:36px; height:36px; border-radius:50%; background:#143314; display:flex; align-items:center; justify-content:center;"><span style="width:14px; height:14px; border:1.5px solid #8FC08F; border-radius:4px;"></span></a>
+            <a href="#" aria-label="Facebook" style="width:36px; height:36px; border-radius:50%; background:#143314; display:flex; align-items:center; justify-content:center;"><span style="width:14px; height:14px; border-radius:50%; border:1.5px solid #8FC08F;"></span></a>
+          </div>
+        </div>
+      </div>
+      <div style="border-top:1px solid #143314; padding-top:24px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:12px;">
+        <div style="font-size:12.5px; color:#6FA06F;">© 2026 SmileUp Dental Clinic. All rights reserved.</div>
+        <div style="display:flex; gap:20px;">
+          <a href="#" style="font-size:12.5px; color:#6FA06F;">Privacy Policy</a>
+          <a href="#" style="font-size:12.5px; color:#6FA06F;">Terms</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- FLOATING WHATSAPP -->
+  <a href="https://wa.me/15551234567" target="_blank" rel="noopener" aria-label="Chat on WhatsApp" style="position:fixed; bottom:24px; right:24px; z-index:60; width:60px; height:60px; border-radius:50%; background:#00B900; box-shadow:0 12px 30px rgba(0,150,0,0.45); display:flex; align-items:center; justify-content:center; transition:transform 0.2s;" style-hover="transform:scale(1.08);">
+    <span style="width:26px; height:26px; border-radius:8px; background:#fff; display:flex; align-items:center; justify-content:center;">
+      <span style="width:12px; height:12px; border-radius:4px; background:#00B900;"></span>
+    </span>
+  </a>
+
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;fontPair&quot;: {&quot;editor&quot;: &quot;enum&quot;, &quot;default&quot;: &quot;geometric&quot;, &quot;options&quot;: [&quot;geometric&quot;, &quot;humanist&quot;, &quot;editorial&quot;], &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Typography&quot;}}">
+const FONT_PAIRS = {
+  geometric: { heading: "'Poppins', sans-serif", body: "'Inter', sans-serif" },
+  humanist: { heading: "'Inter', sans-serif", body: "'Inter', sans-serif" },
+  editorial: { heading: "'Fraunces', serif", body: "'Inter', sans-serif" },
+};
+
+const SERVICES = [
+  { code: 'TW', title: 'Teeth Whitening', desc: 'Professional-grade whitening for a brighter smile in one visit.' },
+  { code: 'DI', title: 'Dental Implants', desc: 'Permanent, natural-looking replacements for missing teeth.' },
+  { code: 'BA', title: 'Braces & Aligners', desc: 'Traditional braces and clear aligners for every age.' },
+  { code: 'RC', title: 'Root Canal', desc: 'Gentle, precise treatment to save an infected tooth.' },
+  { code: 'VN', title: 'Veneers', desc: 'Custom porcelain veneers for a flawless smile makeover.' },
+  { code: 'CB', title: 'Crowns & Bridges', desc: 'Durable restorations that protect and restore function.' },
+  { code: 'DC', title: 'Dental Cleaning', desc: 'Routine cleanings and checkups to keep your smile healthy.' },
+  { code: 'CD', title: 'Cosmetic Dentistry', desc: 'Comprehensive smile design tailored to your goals.' },
+];
+
+const JOURNEY_STEPS = [
+  { n: '01', title: 'Listen & Assess', desc: 'A relaxed consultation where we learn your concerns before we look at a single tooth.' },
+  { n: '02', title: 'Plan Together', desc: 'A clear, jargon-free treatment plan with options and honest pricing — you decide the pace.' },
+  { n: '03', title: 'Treat with Care', desc: 'Modern, minimally-invasive techniques delivered in a calm, unhurried room.' },
+  { n: '04', title: 'Stay in Touch', desc: 'Follow-up check-ins and aftercare guidance so results last well beyond the visit.' },
+];
+
+const GALLERY = [
+  { title: 'Smile Makeover', desc: 'Full veneer restoration, 2 visits.', img: 'https://images.unsplash.com/photo-1517842645767-c639042777db?auto=format&fit=crop&w=500&q=80' },
+  { title: 'Implant Restoration', desc: 'Single tooth implant, 3 months.', img: 'https://images.unsplash.com/photo-1568602471122-7832951cc4c5?auto=format&fit=crop&w=500&q=80' },
+  { title: 'Whitening + Alignment', desc: 'Combined treatment, 4 months.', img: 'https://images.unsplash.com/photo-1489980557514-251d61e3eeb6?auto=format&fit=crop&w=500&q=80' },
+  { title: 'Cosmetic Bonding', desc: 'Front teeth reshaping, 1 visit.', img: 'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?auto=format&fit=crop&w=500&q=80' },
+];
+
+const TESTIMONIALS = [
+  { name: 'Amara O.', location: 'Springfield, IL', stars: '★★★★★', quote: "Best dental experience I've had. The whole team made me feel completely at ease.", avatar: 'https://images.unsplash.com/photo-1489980557514-251d61e3eeb6?auto=format&fit=crop&w=100&q=80' },
+  { name: 'Daniel R.', location: 'Springfield, IL', stars: '★★★★★', quote: 'Dr. Aftab explained everything clearly and the results exceeded my expectations.', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=100&q=80' },
+  { name: 'Priya K.', location: 'Oakview', stars: '★★★★★', quote: 'Modern clinic, friendly staff, and genuinely painless treatment. Highly recommend.', avatar: 'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?auto=format&fit=crop&w=100&q=80' },
+  { name: 'Marcus T.', location: 'Springfield, IL', stars: '★★★★★', quote: 'My implant looks and feels completely natural. Worth every penny.', avatar: 'https://images.unsplash.com/photo-1568602471122-7832951cc4c5?auto=format&fit=crop&w=100&q=80' },
+];
+
+const HOURS = [
+  { day: 'Monday', time: '9:00 AM – 7:00 PM' },
+  { day: 'Tuesday', time: '9:00 AM – 7:00 PM' },
+  { day: 'Wednesday', time: '9:00 AM – 7:00 PM' },
+  { day: 'Thursday', time: '9:00 AM – 7:00 PM' },
+  { day: 'Friday', time: '9:00 AM – 7:00 PM' },
+  { day: 'Saturday', time: '10:00 AM – 4:00 PM' },
+  { day: 'Sunday', time: 'Closed' },
+];
+
+const FAQ = [
+  { q: 'Do you accept dental insurance?', a: 'Yes, we work with most major insurance providers and offer flexible payment plans for out-of-pocket costs.' },
+  { q: 'Is teeth whitening safe?', a: 'Professional whitening performed in-clinic is safe and monitored throughout — far gentler than over-the-counter kits.' },
+  { q: 'How long do dental implants last?', a: 'With proper care, implants commonly last 15-25 years or longer, often for a lifetime.' },
+  { q: 'Will my treatment be painful?', a: 'We use modern anesthesia and gentle techniques to keep every procedure as comfortable as possible.' },
+  { q: 'How often should I visit for a cleaning?', a: 'We recommend a checkup and cleaning every six months to maintain optimal oral health.' },
+  { q: 'Can I book same-day appointments?', a: 'Yes — call or WhatsApp us and we will do our best to fit you in the same day for urgent needs.' },
+];
+
+function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
+
+class Component extends DCLogic {
+  state = {
+    mobileMenuOpen: false,
+    isNarrow: typeof window !== 'undefined' ? window.innerWidth < 1080 : false,
+    formData: { name: '', phone: '', treatment: '', date: '', message: '' },
+    formSubmitted: false,
+    faqOpen: {},
+    animYears: 0,
+    animPatients: 0,
+    animRating: 0,
+    statsAnimated: false,
+  };
+
+  componentDidMount() {
+    this._onResize = () => this.setState({ isNarrow: window.innerWidth < 1080 });
+    window.addEventListener('resize', this._onResize);
+
+    if (this._rootEl && !this._revealObserver) {
+      this.setRootRef(this._rootEl);
+    }
+
+    if (this.statsEl) {
+      this._statsObserver = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && !this.state.statsAnimated) {
+            this.setState({ statsAnimated: true });
+            this._animateStats();
+          }
+        });
+      }, { threshold: 0.4 });
+      this._statsObserver.observe(this.statsEl);
+    }
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener('resize', this._onResize);
+    if (this._revealObserver) this._revealObserver.disconnect();
+    if (this._statsObserver) this._statsObserver.disconnect();
+    if (this._statsRAF) cancelAnimationFrame(this._statsRAF);
+  }
+
+  _animateStats = () => {
+    const duration = 1200;
+    const start = performance.now();
+    const step = (now) => {
+      const t = Math.min(1, (now - start) / duration);
+      const e = easeOutCubic(t);
+      this.setState({ animYears: 12 * e, animPatients: 6000 * e, animRating: 4.9 * e });
+      if (t < 1) this._statsRAF = requestAnimationFrame(step);
+    };
+    this._statsRAF = requestAnimationFrame(step);
+  };
+
+  setStatsRef = (el) => { this.statsEl = el; };
+  setRootRef = (el) => {
+    this._rootEl = el;
+    if (el && !this._revealObserver) {
+      this._revealObserver = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => entry.target.classList.toggle('revealed', entry.isIntersecting));
+      }, { threshold: 0.15 });
+      Array.from(el.querySelectorAll('[data-reveal]')).forEach((node) => this._revealObserver.observe(node));
+    }
+  };
+
+  toggleMobileMenu = () => this.setState(s => ({ mobileMenuOpen: !s.mobileMenuOpen }));
+  closeMobileMenu = () => this.setState({ mobileMenuOpen: false });
+
+  updateField_name = (e) => this.setState(s => ({ formData: { ...s.formData, name: e.target.value } }));
+  updateField_phone = (e) => this.setState(s => ({ formData: { ...s.formData, phone: e.target.value } }));
+  updateField_treatment = (e) => this.setState(s => ({ formData: { ...s.formData, treatment: e.target.value } }));
+  updateField_date = (e) => this.setState(s => ({ formData: { ...s.formData, date: e.target.value } }));
+  updateField_message = (e) => this.setState(s => ({ formData: { ...s.formData, message: e.target.value } }));
+
+  handleSubmit = (e) => {
+    e.preventDefault();
+    this.setState({ formSubmitted: true });
+  };
+
+  toggleFaq = (i) => this.setState(s => ({ faqOpen: { ...s.faqOpen, [i]: !s.faqOpen[i] } }));
+
+  renderVals() {
+    const fontPair = FONT_PAIRS[this.props.fontPair] || FONT_PAIRS.geometric;
+    const isNarrow = this.state.isNarrow;
+    const faqItemsWithState = FAQ.map((f, i) => ({
+      q: f.q,
+      a: f.a,
+      open: !!this.state.faqOpen[i],
+      symbol: this.state.faqOpen[i] ? '−' : '+',
+      toggle: () => this.toggleFaq(i),
+    }));
+    return {
+      headingFont: fontPair.heading,
+      bodyFont: fontPair.body,
+      navRowDisplay: isNarrow ? 'none' : 'flex',
+      phoneDisplay: isNarrow ? 'none' : 'block',
+      hamburgerDisplay: isNarrow ? 'flex' : 'none',
+      mobileMenuOpen: isNarrow && this.state.mobileMenuOpen,
+      toggleMobileMenu: this.toggleMobileMenu,
+      closeMobileMenu: this.closeMobileMenu,
+      statsRef: this.setStatsRef,
+      setRootRef: this.setRootRef,
+      statYearsDisplay: `${Math.round(this.state.animYears)}+`,
+      statPatientsDisplay: `${Math.round(this.state.animPatients).toLocaleString()}+`,
+      statRatingDisplay: `${this.state.animRating.toFixed(1)}★`,
+      services: SERVICES,
+      journeySteps: JOURNEY_STEPS,
+      gallery: GALLERY,
+      testimonials: TESTIMONIALS,
+      hours: HOURS,
+      faqItemsWithState,
+      formData: this.state.formData,
+      formSubmitted: this.state.formSubmitted,
+      formNotSubmitted: !this.state.formSubmitted,
+      updateField_name: this.updateField_name,
+      updateField_phone: this.updateField_phone,
+      updateField_treatment: this.updateField_treatment,
+      updateField_date: this.updateField_date,
+      updateField_message: this.updateField_message,
+      handleSubmit: this.handleSubmit,
+    };
+  }
+}
+</script>
+</body>
+</html>
