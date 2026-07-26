@@ -10,6 +10,16 @@ export const contact = {
   mapEmbedSrc: "https://www.google.com/maps?q=Springfield&output=embed",
 };
 
+export const dentist = {
+  name: "Dr. Saad Aftab",
+  photo:
+    "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=800&q=80",
+  bio: "Dr. Aftab has spent over a decade helping patients love their smiles again — blending precise clinical technique with a genuinely warm chairside manner. He believes great dentistry should feel unhurried, transparent, and painless.",
+  qualification: "BDS, MDS (Prosthodontics)",
+  experience: "12+ years in practice",
+  focus: "Implants & Cosmetic Dentistry",
+};
+
 export const navLinks = [
   { href: "#why", label: "Why Us" },
   { href: "#services", label: "Services" },
