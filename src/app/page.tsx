@@ -5,6 +5,7 @@ import { Services } from "@/components/sections/Services";
 import { Gallery } from "@/components/sections/Gallery";
 import { Dentist } from "@/components/sections/Dentist";
 import { Testimonials } from "@/components/sections/Testimonials";
+import { ClinicInfo } from "@/components/sections/ClinicInfo";
 
 export default function Home() {
   return (
@@ -17,6 +18,7 @@ export default function Home() {
         <Gallery />
         <Dentist />
         <Testimonials />
+        <ClinicInfo />
       </main>
     </>
   );
