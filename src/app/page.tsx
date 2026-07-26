@@ -1,4 +1,6 @@
 import { Navbar } from "@/components/layout/Navbar";
+import { Footer } from "@/components/layout/Footer";
+import { WhatsAppButton } from "@/components/layout/WhatsAppButton";
 import { Hero } from "@/components/sections/Hero";
 import { Approach } from "@/components/sections/Approach";
 import { Services } from "@/components/sections/Services";
@@ -24,6 +26,8 @@ export default function Home() {
         <Booking />
         <Faq />
       </main>
+      <Footer />
+      <WhatsAppButton />
     </>
   );
 }
