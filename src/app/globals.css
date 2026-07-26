@@ -21,6 +21,11 @@
 
   --font-heading: var(--font-poppins);
   --font-body: var(--font-inter);
+
+  /* The design collapses the nav to a hamburger below 1080px, which sits
+     between Tailwind's default lg (1024px) and xl (1280px) breakpoints —
+     so we add our own named breakpoint rather than stretch an existing one. */
+  --breakpoint-nav: 1080px;
 }
 
 html {
