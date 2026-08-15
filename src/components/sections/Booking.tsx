@@ -1,14 +1,16 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { services } from "@/data/site";
 import { useReveal } from "@/hooks/useReveal";
+import { fetchAvailableSlots, submitBooking } from "@/app/actions/booking";
 
 interface BookingFormData {
   name: string;
   phone: string;
   treatment: string;
   date: string;
+  time: string;
   message: string;
 }
 
@@ -17,14 +19,54 @@ const initialFormData: BookingFormData = {
   phone: "",
   treatment: "",
   date: "",
+  time: "",
   message: "",
 };
+
+function formatSlotLabel(time: string): string {
+  const [h, m] = time.split(":").map(Number);
+  const period = h >= 12 ? "PM" : "AM";
+  const hour12 = h % 12 === 0 ? 12 : h % 12;
+  return `${hour12}:${String(m).padStart(2, "0")} ${period}`;
+}
 
 export function Booking() {
   const textRef = useReveal<HTMLDivElement>();
   const formRef = useReveal<HTMLFormElement>();
   const [formData, setFormData] = useState<BookingFormData>(initialFormData);
   const [submitted, setSubmitted] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  // Tracks which date the fetched slots belong to, alongside the slots
+  // themselves, rather than a separate `loadingSlots` boolean set eagerly
+  // at the top of the effect. "Loading" is then derived (slotsFor.date !==
+  // formData.date) instead of set directly — every setState call below
+  // happens inside the async .then() callback, none synchronously in the
+  // effect body, which is what avoids the cascading-render footgun the
+  // "no setState directly in an effect" lint rule is guarding against.
+  const [slotsFor, setSlotsFor] = useState<{ date: string; slots: string[] }>({
+    date: "",
+    slots: [],
+  });
+  const loadingSlots = formData.date !== "" && slotsFor.date !== formData.date;
+  const availableSlots = slotsFor.date === formData.date ? slotsFor.slots : [];
+
+  // Whenever the chosen date changes, ask the server which times are still
+  // open — this list can go stale (someone else books a slot) between here
+  // and submit, which is why submitBooking re-checks server-side too; this
+  // fetch is just for showing the patient a useful picker, not a guarantee.
+  useEffect(() => {
+    // Nothing to fetch without a date — the time-slot field itself is only
+    // rendered once formData.date is set.
+    if (!formData.date) return;
+    let cancelled = false;
+    fetchAvailableSlots(formData.date).then((slots) => {
+      if (!cancelled) setSlotsFor({ date: formData.date, slots });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [formData.date]);
 
   function updateField<K extends keyof BookingFormData>(
     field: K,
@@ -33,11 +75,24 @@ export function Booking() {
     setFormData((prev) => ({ ...prev, [field]: value }));
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    // No backend yet — see design-reference README. This should POST to
-    // whatever booking system/CRM the clinic ends up using.
-    setSubmitted(true);
+    setSubmitError(null);
+    setIsSubmitting(true);
+    const result = await submitBooking({
+      name: formData.name,
+      phone: formData.phone,
+      serviceTitle: formData.treatment,
+      date: formData.date,
+      time: formData.time,
+      message: formData.message,
+    });
+    setIsSubmitting(false);
+    if (result.ok) {
+      setSubmitted(true);
+    } else {
+      setSubmitError(result.error);
+    }
   }
 
   return (
@@ -123,11 +178,43 @@ export function Booking() {
                 </label>
                 <input
                   type="date"
+                  required
+                  min={new Date().toISOString().slice(0, 10)}
                   value={formData.date}
-                  onChange={(e) => updateField("date", e.target.value)}
+                  onChange={(e) => {
+                    updateField("date", e.target.value);
+                    updateField("time", "");
+                  }}
                   className="w-full rounded-[10px] border border-line px-3.5 py-3 font-[inherit] text-[14.5px]"
                 />
               </div>
+              {formData.date && (
+                <div>
+                  <label className="mb-1.5 block text-[13px] font-semibold text-ink">
+                    Preferred Time
+                  </label>
+                  <select
+                    required
+                    value={formData.time}
+                    onChange={(e) => updateField("time", e.target.value)}
+                    disabled={loadingSlots || availableSlots.length === 0}
+                    className="w-full rounded-[10px] border border-line bg-white px-3.5 py-3 font-[inherit] text-[14.5px] disabled:opacity-60"
+                  >
+                    <option value="">
+                      {loadingSlots
+                        ? "Loading available times…"
+                        : availableSlots.length === 0
+                          ? "No times available this day"
+                          : "Select a time"}
+                    </option>
+                    {availableSlots.map((slot) => (
+                      <option key={slot} value={slot}>
+                        {formatSlotLabel(slot)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
               <div>
                 <label className="mb-1.5 block text-[13px] font-semibold text-ink">
                   Message (optional)
@@ -140,11 +227,15 @@ export function Booking() {
                   className="w-full resize-y rounded-[10px] border border-line px-3.5 py-3 font-[inherit] text-[14.5px]"
                 />
               </div>
+              {submitError && (
+                <p className="text-[13.5px] font-medium text-red-600">{submitError}</p>
+              )}
               <button
                 type="submit"
-                className="mt-1 rounded-xl bg-brand px-5 py-4 text-[15.5px] font-bold text-white transition-colors hover:bg-brand-dark"
+                disabled={isSubmitting}
+                className="mt-1 rounded-xl bg-brand px-5 py-4 text-[15.5px] font-bold text-white transition-colors hover:bg-brand-dark disabled:opacity-60"
               >
-                Request Appointment
+                {isSubmitting ? "Requesting…" : "Request Appointment"}
               </button>
             </>
           )}

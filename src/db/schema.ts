@@ -8,7 +8,9 @@ import {
   date,
   timestamp,
   pgEnum,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 
 // ---------------------------------------------------------------------------
 // services — mirrors the shape currently hardcoded in src/data/site.ts.
@@ -52,15 +54,27 @@ export const appointmentStatus = pgEnum("appointment_status", [
   "cancelled",
 ]);
 
-export const appointments = pgTable("appointments", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  patientName: text("patient_name").notNull(),
-  patientPhone: text("patient_phone").notNull(),
-  serviceId: uuid("service_id").references(() => services.id, { onDelete: "set null" }),
-  appointmentDate: date("appointment_date").notNull(),
-  appointmentTime: time("appointment_time").notNull(),
-  status: appointmentStatus("status").notNull().default("pending"),
-  notes: text("notes"),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-});
+export const appointments = pgTable(
+  "appointments",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    patientName: text("patient_name").notNull(),
+    patientPhone: text("patient_phone").notNull(),
+    serviceId: uuid("service_id").references(() => services.id, { onDelete: "set null" }),
+    appointmentDate: date("appointment_date").notNull(),
+    appointmentTime: time("appointment_time").notNull(),
+    status: appointmentStatus("status").notNull().default("pending"),
+    notes: text("notes"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    // Guards against double-booking at the database level, not just in
+    // application code — two concurrent requests for the same slot can't
+    // both succeed, the second one's insert will violate this and fail.
+    // Excludes cancelled appointments so a freed-up slot can be rebooked.
+    uniqueIndex("appointments_active_slot_unique")
+      .on(table.appointmentDate, table.appointmentTime)
+      .where(sql`${table.status} <> 'cancelled'`),
+  ],
+);

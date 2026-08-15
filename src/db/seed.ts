@@ -28,7 +28,8 @@ function parseHourRange(time: string): { opensAt: string; closesAt: string } | n
 
 function to24Hour(label: string): string {
   const [time, meridiem] = label.split(" ");
-  let [hours, minutes] = time.split(":").map(Number);
+  const [hoursRaw, minutes] = time.split(":").map(Number);
+  let hours = hoursRaw;
   if (meridiem === "PM" && hours !== 12) hours += 12;
   if (meridiem === "AM" && hours === 12) hours = 0;
   return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:00`;
