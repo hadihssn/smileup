@@ -42,6 +42,21 @@ export const clinicHours = pgTable("clinic_hours", {
 });
 
 // ---------------------------------------------------------------------------
+// blocked_dates — one-off exceptions to the recurring weekly schedule in
+// clinic_hours (a holiday, the dentist being away, etc). Kept as its own
+// table rather than a flag on clinic_hours because these are exceptions
+// to a specific calendar date, not a change to the recurring weekly
+// pattern — clinic_hours answers "what does a normal Tuesday look like,"
+// this table answers "is this particular date different."
+// ---------------------------------------------------------------------------
+export const blockedDates = pgTable("blocked_dates", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  date: date("date").notNull().unique(),
+  reason: text("reason"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// ---------------------------------------------------------------------------
 // appointments — the core booking record. patientName/Phone are stored
 // directly rather than as a separate "patients" table for now: this project
 // doesn't have patient accounts/logins, and a normalized patients table

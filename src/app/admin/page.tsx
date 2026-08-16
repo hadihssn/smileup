@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { auth } from "@/lib/auth/server";
-import { signOutAction } from "./actions";
+import { signOutAction, updateAppointmentStatusAction, blockDateAction, unblockDateAction } from "./actions";
 import { getAppointments, type AppointmentView, type AppointmentRow } from "@/lib/appointments";
+import { getBlockedDates } from "@/lib/blockedDates";
 import { formatDateLabel, formatTimeLabel } from "@/lib/format";
 
 // Server Components reading session state must opt out of static
@@ -31,6 +32,36 @@ function groupByDate(rows: AppointmentRow[]): [string, AppointmentRow[]][] {
   return [...groups.entries()];
 }
 
+function AppointmentActions({ row }: { row: AppointmentRow }) {
+  if (row.status === "cancelled") return null;
+  return (
+    <div className="flex shrink-0 gap-1.5">
+      {row.status === "pending" && (
+        <form action={updateAppointmentStatusAction}>
+          <input type="hidden" name="id" value={row.id} />
+          <input type="hidden" name="status" value="confirmed" />
+          <button
+            type="submit"
+            className="rounded-lg bg-brand px-2.5 py-1.5 text-[12px] font-semibold text-white hover:bg-brand-dark"
+          >
+            Confirm
+          </button>
+        </form>
+      )}
+      <form action={updateAppointmentStatusAction}>
+        <input type="hidden" name="id" value={row.id} />
+        <input type="hidden" name="status" value="cancelled" />
+        <button
+          type="submit"
+          className="rounded-lg border border-line px-2.5 py-1.5 text-[12px] font-semibold text-muted hover:bg-section"
+        >
+          Cancel
+        </button>
+      </form>
+    </div>
+  );
+}
+
 export default async function AdminPage({
   searchParams,
 }: {
@@ -43,8 +74,10 @@ export default async function AdminPage({
       ? requestedView
       : "upcoming";
 
-  const rows = await getAppointments(view);
+  const [rows, blocked] = await Promise.all([getAppointments(view), getBlockedDates()]);
   const groups = groupByDate(rows);
+  const today = new Date().toISOString().slice(0, 10);
+  const upcomingBlocked = blocked.filter((b) => b.date >= today);
 
   return (
     <main className="min-h-screen bg-section px-6 py-10">
@@ -99,7 +132,7 @@ export default async function AdminPage({
                   {dayRows.map((row) => (
                     <div
                       key={row.id}
-                      className="flex items-center justify-between rounded-2xl bg-white p-4 shadow-[0_4px_16px_rgba(0,0,0,0.04)]"
+                      className="flex items-center justify-between gap-3 rounded-2xl bg-white p-4 shadow-[0_4px_16px_rgba(0,0,0,0.04)]"
                     >
                       <div className="flex items-center gap-4">
                         <div className="w-[72px] shrink-0 text-[13.5px] font-semibold text-ink">
@@ -115,11 +148,14 @@ export default async function AdminPage({
                           </div>
                         </div>
                       </div>
-                      <span
-                        className={`rounded-full px-3 py-1 text-[12px] font-semibold capitalize ${STATUS_STYLES[row.status]}`}
-                      >
-                        {row.status}
-                      </span>
+                      <div className="flex items-center gap-3">
+                        <span
+                          className={`rounded-full px-3 py-1 text-[12px] font-semibold capitalize ${STATUS_STYLES[row.status]}`}
+                        >
+                          {row.status}
+                        </span>
+                        <AppointmentActions row={row} />
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -127,6 +163,70 @@ export default async function AdminPage({
             ))}
           </div>
         )}
+
+        <div className="mt-10">
+          <h2 className="mb-2 text-[13.5px] font-bold tracking-[0.02em] text-muted uppercase">
+            Blocked dates
+          </h2>
+          <div className="rounded-2xl bg-white p-4 shadow-[0_4px_16px_rgba(0,0,0,0.04)]">
+            <form action={blockDateAction} className="mb-4 flex flex-wrap items-end gap-2">
+              <div>
+                <label className="mb-1 block text-[12px] font-semibold text-ink">Date</label>
+                <input
+                  type="date"
+                  name="date"
+                  required
+                  min={today}
+                  className="rounded-lg border border-line px-2.5 py-2 font-[inherit] text-[13.5px]"
+                />
+              </div>
+              <div className="flex-1">
+                <label className="mb-1 block text-[12px] font-semibold text-ink">
+                  Reason (optional)
+                </label>
+                <input
+                  type="text"
+                  name="reason"
+                  placeholder="e.g. Public holiday"
+                  className="w-full rounded-lg border border-line px-2.5 py-2 font-[inherit] text-[13.5px]"
+                />
+              </div>
+              <button
+                type="submit"
+                className="rounded-lg bg-brand px-3.5 py-2 text-[13px] font-semibold text-white hover:bg-brand-dark"
+              >
+                Block
+              </button>
+            </form>
+
+            {upcomingBlocked.length === 0 ? (
+              <p className="text-[13px] text-muted">No upcoming blocked dates.</p>
+            ) : (
+              <div className="flex flex-col gap-1.5">
+                {upcomingBlocked.map((b) => (
+                  <div
+                    key={b.id}
+                    className="flex items-center justify-between rounded-lg border border-line px-3 py-2"
+                  >
+                    <div className="text-[13.5px] text-ink">
+                      <span className="font-semibold">{formatDateLabel(b.date)}</span>
+                      {b.reason && <span className="text-muted"> — {b.reason}</span>}
+                    </div>
+                    <form action={unblockDateAction}>
+                      <input type="hidden" name="id" value={b.id} />
+                      <button
+                        type="submit"
+                        className="text-[12px] font-semibold text-muted hover:text-ink"
+                      >
+                        Remove
+                      </button>
+                    </form>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </main>
   );

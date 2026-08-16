@@ -1,6 +1,6 @@
 import { and, eq, ne } from "drizzle-orm";
 import { db } from "@/db";
-import { appointments, clinicHours } from "@/db/schema";
+import { appointments, blockedDates, clinicHours } from "@/db/schema";
 
 // "YYYY-MM-DD" -> 0 (Sunday) .. 6 (Saturday), matching clinicHours.dayOfWeek
 // and JS Date#getDay(). Built from local date parts, not `new Date(dateStr)`
@@ -25,12 +25,21 @@ function minutesToTimeString(minutes: number): string {
 }
 
 /**
- * Returns every bookable "HH:MM" slot for a given date, minus slots already
- * taken by a pending or confirmed appointment. Cancelled appointments don't
- * block a slot — the whole point of tracking status is that a cancelled
- * booking frees the time back up.
+ * Returns every bookable "HH:MM" slot for a given date: empty if the date
+ * is in blocked_dates (dentist marked it unavailable) or the clinic is
+ * closed that weekday, otherwise every slot minus ones already taken by a
+ * pending or confirmed appointment. Cancelled appointments don't block a
+ * slot — the whole point of tracking status is that a cancelled booking
+ * frees the time back up.
  */
 export async function getAvailableSlots(dateStr: string): Promise<string[]> {
+  const [blocked] = await db
+    .select()
+    .from(blockedDates)
+    .where(eq(blockedDates.date, dateStr))
+    .limit(1);
+  if (blocked) return [];
+
   const dayOfWeek = dayOfWeekFor(dateStr);
 
   const [hours] = await db
