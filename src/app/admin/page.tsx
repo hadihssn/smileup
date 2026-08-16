@@ -3,7 +3,7 @@ import { auth } from "@/lib/auth/server";
 import { signOutAction, updateAppointmentStatusAction, blockDateAction, unblockDateAction } from "./actions";
 import { getAppointments, type AppointmentView, type AppointmentRow } from "@/lib/appointments";
 import { getBlockedDates } from "@/lib/blockedDates";
-import { formatDateLabel, formatTimeLabel } from "@/lib/format";
+import { formatDateLabel, formatTimeLabel, formatPKR } from "@/lib/format";
 
 // Server Components reading session state must opt out of static
 // rendering — the session depends on the request's cookies, so this page
@@ -34,7 +34,6 @@ function groupByDate(rows: AppointmentRow[]): [string, AppointmentRow[]][] {
 }
 
 function AppointmentActions({ row }: { row: AppointmentRow }) {
-  if (row.status === "cancelled") return null;
   return (
     <div className="flex shrink-0 gap-1.5">
       {row.status === "pending" && (
@@ -49,16 +48,24 @@ function AppointmentActions({ row }: { row: AppointmentRow }) {
           </button>
         </form>
       )}
-      <form action={updateAppointmentStatusAction}>
-        <input type="hidden" name="id" value={row.id} />
-        <input type="hidden" name="status" value="cancelled" />
-        <button
-          type="submit"
-          className="rounded-lg border border-line px-2.5 py-1.5 text-[12px] font-semibold text-muted hover:bg-section"
-        >
-          Cancel
-        </button>
-      </form>
+      {row.status !== "cancelled" && (
+        <form action={updateAppointmentStatusAction}>
+          <input type="hidden" name="id" value={row.id} />
+          <input type="hidden" name="status" value="cancelled" />
+          <button
+            type="submit"
+            className="rounded-lg border border-line px-2.5 py-1.5 text-[12px] font-semibold text-muted hover:bg-section"
+          >
+            Cancel
+          </button>
+        </form>
+      )}
+      <a
+        href={`/admin/appointments/${row.id}/edit`}
+        className="rounded-lg border border-line px-2.5 py-1.5 text-[12px] font-semibold text-muted hover:bg-section"
+      >
+        Edit
+      </a>
     </div>
   );
 }
@@ -83,7 +90,7 @@ export default async function AdminPage({
   return (
     <main className="min-h-screen bg-section px-6 py-10">
       <div className="mx-auto max-w-3xl">
-        <div className="mb-6 flex items-center justify-between">
+        <div className="mb-4 flex items-center justify-between">
           <div>
             <h1 className="font-heading text-2xl font-bold text-ink">Admin dashboard</h1>
             <p className="mt-1 text-[13px] text-muted">
@@ -100,20 +107,35 @@ export default async function AdminPage({
           </form>
         </div>
 
-        <div className="mb-6 flex gap-2">
-          {VIEWS.map((v) => (
-            <Link
-              key={v.value}
-              href={`/admin?view=${v.value}`}
-              className={`rounded-full px-4 py-2 text-[13.5px] font-semibold transition-colors ${
-                v.value === view
-                  ? "bg-brand text-white"
-                  : "border border-line bg-white text-ink hover:bg-brand-tint"
-              }`}
-            >
-              {v.label}
-            </Link>
-          ))}
+        <div className="mb-6 flex gap-4 border-b border-line text-[13.5px] font-semibold">
+          <span className="border-b-2 border-brand px-1 pb-2 text-brand-dark">Appointments</span>
+          <Link href="/admin/revenue" className="px-1 pb-2 text-muted hover:text-ink">
+            Revenue
+          </Link>
+        </div>
+
+        <div className="mb-6 flex items-center justify-between gap-2">
+          <div className="flex gap-2">
+            {VIEWS.map((v) => (
+              <Link
+                key={v.value}
+                href={`/admin?view=${v.value}`}
+                className={`rounded-full px-4 py-2 text-[13.5px] font-semibold transition-colors ${
+                  v.value === view
+                    ? "bg-brand text-white"
+                    : "border border-line bg-white text-ink hover:bg-brand-tint"
+                }`}
+              >
+                {v.label}
+              </Link>
+            ))}
+          </div>
+          <a
+            href="/admin/appointments/new"
+            className="rounded-full bg-ink px-4 py-2 text-[13.5px] font-semibold text-white hover:bg-ink/85"
+          >
+            + New appointment
+          </a>
         </div>
 
         {groups.length === 0 ? (
@@ -142,10 +164,16 @@ export default async function AdminPage({
                         <div>
                           <div className="text-[14.5px] font-semibold text-ink">
                             {row.patientName}
+                            {row.isManualEntry && (
+                              <span className="ml-1.5 text-[11px] font-medium text-muted">
+                                (manual)
+                              </span>
+                            )}
                           </div>
                           <div className="text-[13px] text-muted">
                             {row.patientPhone}
                             {row.serviceTitle && ` · ${row.serviceTitle}`}
+                            {row.chargeAmount != null && ` · ${formatPKR(row.chargeAmount)}`}
                           </div>
                         </div>
                       </div>

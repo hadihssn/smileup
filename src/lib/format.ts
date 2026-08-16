@@ -23,3 +23,9 @@ export function formatDateLabel(dateStr: string): string {
     day: "numeric",
   });
 }
+
+// Whole PKR, no decimals — matches how chargeAmount is stored (see
+// docs/notes/24 on why it's a plain integer, not a decimal type).
+export function formatPKR(amount: number): string {
+  return `Rs ${amount.toLocaleString("en-US")}`;
+}
