@@ -19,6 +19,7 @@ const VIEWS: { value: AppointmentView; label: string }[] = [
 const STATUS_STYLES: Record<AppointmentRow["status"], string> = {
   pending: "bg-amber-100 text-amber-800",
   confirmed: "bg-brand-tint text-brand-dark",
+  completed: "bg-sky-100 text-sky-800",
   cancelled: "bg-line text-muted line-through",
 };
 

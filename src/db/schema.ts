@@ -63,9 +63,18 @@ export const blockedDates = pgTable("blocked_dates", {
 // would be speculative complexity until there's an actual reason for it
 // (e.g. patient history lookups in a later phase).
 // ---------------------------------------------------------------------------
+// "completed" marks a visit that actually happened — separate from
+// "confirmed" (scheduled, but the patient hasn't shown up yet) because
+// revenue should reflect money actually collected, not appointments that
+// were merely on the calendar. A "confirmed" appointment whose date has
+// passed without being marked "completed" is effectively an unrecorded
+// no-show — there's no separate no_show status yet since nothing reads
+// that distinction today, but it's a natural next addition if the
+// dentist wants no-show tracking later.
 export const appointmentStatus = pgEnum("appointment_status", [
   "pending",
   "confirmed",
+  "completed",
   "cancelled",
 ]);
 
@@ -79,6 +88,20 @@ export const appointments = pgTable(
     appointmentDate: date("appointment_date").notNull(),
     appointmentTime: time("appointment_time").notNull(),
     status: appointmentStatus("status").notNull().default("pending"),
+    // Whole PKR (no paisa) — manually entered by staff, not looked up from
+    // a service price list. Real clinics negotiate, discount, and adjust
+    // for insurance/complexity per visit, so the number that ends up
+    // counted as revenue is what was actually charged for that specific
+    // appointment, not a catalog price. Null until someone enters it
+    // (typically when marking the visit "completed").
+    chargeAmount: integer("charge_amount"),
+    // True for appointments the dentist/staff typed in directly (a
+    // walk-in, a phone booking) rather than ones a patient submitted
+    // through the public booking form. Online bookings are expected to be
+    // a small minority of real volume — this flag is what lets the
+    // revenue view (and eventually reporting) distinguish "how this
+    // appointment got on the books" without guessing from other fields.
+    isManualEntry: boolean("is_manual_entry").notNull().default(false),
     notes: text("notes"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
