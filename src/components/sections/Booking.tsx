@@ -4,6 +4,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { services } from "@/data/site";
 import { useReveal } from "@/hooks/useReveal";
 import { fetchAvailableSlots, submitBooking } from "@/app/actions/booking";
+import { formatTimeLabel } from "@/lib/format";
 
 interface BookingFormData {
   name: string;
@@ -22,13 +23,6 @@ const initialFormData: BookingFormData = {
   time: "",
   message: "",
 };
-
-function formatSlotLabel(time: string): string {
-  const [h, m] = time.split(":").map(Number);
-  const period = h >= 12 ? "PM" : "AM";
-  const hour12 = h % 12 === 0 ? 12 : h % 12;
-  return `${hour12}:${String(m).padStart(2, "0")} ${period}`;
-}
 
 export function Booking() {
   const textRef = useReveal<HTMLDivElement>();
@@ -209,7 +203,7 @@ export function Booking() {
                     </option>
                     {availableSlots.map((slot) => (
                       <option key={slot} value={slot}>
-                        {formatSlotLabel(slot)}
+                        {formatTimeLabel(slot)}
                       </option>
                     ))}
                   </select>
