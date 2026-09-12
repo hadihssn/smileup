@@ -118,8 +118,7 @@ export default async function RevenuePage({
         <div className="mb-6 rounded-xl border border-dashed border-line bg-white/60 px-4 py-3 text-[12.5px] text-muted">
           💡 Idea for later: this tracks revenue only (money collected).
           Adding expense tracking (supplies, rent, staff) would turn this
-          into a real profit view — worth raising with the dentist, not
-          built yet.
+          into a real profit view.
         </div>
 
         <div>
