@@ -1,15 +1,12 @@
 import Link from "next/link";
-import { auth } from "@/lib/auth/server";
+import { Plus, CalendarOff, Check, X, Pencil } from "lucide-react";
 import { updateAppointmentStatusAction, blockDateAction, unblockDateAction } from "./actions";
 import { getAppointments, type AppointmentView, type AppointmentRow } from "@/lib/appointments";
 import { getBlockedDates } from "@/lib/blockedDates";
 import { formatDateLabel, formatTimeLabel, formatPKR } from "@/lib/format";
-import { AdminHeader } from "./_components/AdminHeader";
 import { STATUS_STYLES } from "./_components/statusStyles";
+import { PageHeader } from "./_components/PageHeader";
 
-// Server Components reading session state must opt out of static
-// rendering — the session depends on the request's cookies, so this page
-// can't be cached at build time.
 export const dynamic = "force-dynamic";
 
 const VIEWS: { value: AppointmentView; label: string }[] = [
@@ -30,16 +27,17 @@ function groupByDate(rows: AppointmentRow[]): [string, AppointmentRow[]][] {
 
 function AppointmentActions({ row }: { row: AppointmentRow }) {
   return (
-    <div className="flex shrink-0 gap-1.5">
+    <div className="flex shrink-0 items-center gap-1.5">
       {row.status === "pending" && (
         <form action={updateAppointmentStatusAction}>
           <input type="hidden" name="id" value={row.id} />
           <input type="hidden" name="status" value="confirmed" />
           <button
             type="submit"
-            className="rounded-lg bg-brand px-2.5 py-1.5 text-[12px] font-semibold text-white hover:bg-brand-dark"
+            title="Confirm"
+            className="flex h-7 w-7 items-center justify-center rounded-md bg-brand text-white hover:bg-brand-dark"
           >
-            Confirm
+            <Check size={14} strokeWidth={2.5} />
           </button>
         </form>
       )}
@@ -49,18 +47,20 @@ function AppointmentActions({ row }: { row: AppointmentRow }) {
           <input type="hidden" name="status" value="cancelled" />
           <button
             type="submit"
-            className="rounded-lg border border-line px-2.5 py-1.5 text-[12px] font-semibold text-muted hover:bg-section"
+            title="Cancel"
+            className="flex h-7 w-7 items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 hover:text-slate-700"
           >
-            Cancel
+            <X size={14} strokeWidth={2.5} />
           </button>
         </form>
       )}
-      <a
+      <Link
         href={`/admin/appointments/${row.id}/edit`}
-        className="rounded-lg border border-line px-2.5 py-1.5 text-[12px] font-semibold text-muted hover:bg-section"
+        title="Edit"
+        className="flex h-7 w-7 items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 hover:text-slate-700"
       >
-        Edit
-      </a>
+        <Pencil size={13} strokeWidth={2.25} />
+      </Link>
     </div>
   );
 }
@@ -70,7 +70,6 @@ export default async function AdminPage({
 }: {
   searchParams: Promise<{ view?: string }>;
 }) {
-  const { data: session } = await auth.getSession();
   const requestedView = (await searchParams).view;
   const view: AppointmentView =
     requestedView === "today" || requestedView === "upcoming" || requestedView === "all"
@@ -83,153 +82,143 @@ export default async function AdminPage({
   const upcomingBlocked = blocked.filter((b) => b.date >= today);
 
   return (
-    <main className="min-h-screen bg-section px-6 py-10">
-      <div className="mx-auto max-w-3xl">
-        <AdminHeader email={session?.user?.email} activeTab="appointments" />
-
-        <div className="mb-6 flex items-center justify-between gap-2">
-          <div className="flex gap-2">
-            {VIEWS.map((v) => (
-              <Link
-                key={v.value}
-                href={`/admin?view=${v.value}`}
-                className={`rounded-full px-4 py-2 text-[13.5px] font-semibold transition-colors ${
-                  v.value === view
-                    ? "bg-brand text-white"
-                    : "border border-line bg-white text-ink hover:bg-brand-tint"
-                }`}
-              >
-                {v.label}
-              </Link>
-            ))}
-          </div>
-          <a
+    <>
+      <PageHeader
+        title="Appointments"
+        action={
+          <Link
             href="/admin/appointments/new"
-            className="rounded-full bg-ink px-4 py-2 text-[13.5px] font-semibold text-white hover:bg-ink/85"
+            className="flex items-center gap-1.5 rounded-lg bg-brand px-3.5 py-2 text-sm font-medium text-white hover:bg-brand-dark"
           >
-            + New appointment
-          </a>
+            <Plus size={15} strokeWidth={2.5} />
+            New appointment
+          </Link>
+        }
+      />
+
+      <div className="mb-5 flex gap-1 rounded-lg bg-slate-100 p-1 text-sm font-medium">
+        {VIEWS.map((v) => (
+          <Link
+            key={v.value}
+            href={`/admin?view=${v.value}`}
+            className={`rounded-md px-3 py-1.5 transition-colors ${
+              v.value === view ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-800"
+            }`}
+          >
+            {v.label}
+          </Link>
+        ))}
+      </div>
+
+      {groups.length === 0 ? (
+        <div className="rounded-xl border border-slate-200 bg-white p-10 text-center">
+          <p className="text-sm text-slate-500">
+            No {view === "today" ? "appointments today" : view === "upcoming" ? "upcoming appointments" : "appointments yet"}.
+          </p>
         </div>
-
-        {groups.length === 0 ? (
-          <div className="rounded-2xl bg-white p-8 text-center shadow-[0_8px_30px_rgba(0,0,0,0.06)]">
-            <p className="text-[14.5px] text-muted">
-              No {view === "today" ? "appointments today" : view === "upcoming" ? "upcoming appointments" : "appointments yet"}.
-            </p>
-          </div>
-        ) : (
-          <div className="flex flex-col gap-6">
-            {groups.map(([date, dayRows]) => (
-              <div key={date}>
-                <h2 className="mb-2 text-[13.5px] font-bold tracking-[0.02em] text-muted uppercase">
-                  {formatDateLabel(date)}
-                </h2>
-                <div className="flex flex-col gap-2">
-                  {dayRows.map((row) => (
-                    <div
-                      key={row.id}
-                      className="flex items-center justify-between gap-3 rounded-2xl bg-white p-4 shadow-[0_4px_16px_rgba(0,0,0,0.04)]"
-                    >
-                      <div className="flex items-center gap-4">
-                        <div className="w-[72px] shrink-0 text-[13.5px] font-semibold text-ink">
-                          {formatTimeLabel(row.time)}
+      ) : (
+        <div className="flex flex-col gap-5">
+          {groups.map(([date, dayRows]) => (
+            <div key={date}>
+              <h2 className="mb-2 text-xs font-semibold tracking-wide text-slate-500 uppercase">
+                {formatDateLabel(date)}
+              </h2>
+              <div className="divide-y divide-slate-200 rounded-xl border border-slate-200 bg-white">
+                {dayRows.map((row) => (
+                  <div key={row.id} className="flex items-center justify-between gap-3 px-4 py-3">
+                    <div className="flex items-center gap-4">
+                      <div className="w-[68px] shrink-0 text-sm font-medium text-slate-700">
+                        {formatTimeLabel(row.time)}
+                      </div>
+                      <div>
+                        <div className="text-sm font-medium text-slate-900">
+                          {row.patientName}
+                          {row.isManualEntry && (
+                            <span className="ml-1.5 text-xs font-normal text-slate-400">(manual)</span>
+                          )}
                         </div>
-                        <div>
-                          <div className="text-[14.5px] font-semibold text-ink">
-                            {row.patientName}
-                            {row.isManualEntry && (
-                              <span className="ml-1.5 text-[11px] font-medium text-muted">
-                                (manual)
-                              </span>
-                            )}
-                          </div>
-                          <div className="text-[13px] text-muted">
-                            {row.patientPhone}
-                            {row.serviceTitle && ` · ${row.serviceTitle}`}
-                            {row.chargeAmount != null && ` · ${formatPKR(row.chargeAmount)}`}
-                          </div>
+                        <div className="text-[13px] text-slate-500">
+                          {row.patientPhone}
+                          {row.serviceTitle && ` · ${row.serviceTitle}`}
+                          {row.chargeAmount != null && ` · ${formatPKR(row.chargeAmount)}`}
                         </div>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <span
-                          className={`rounded-full px-3 py-1 text-[12px] font-semibold capitalize ${STATUS_STYLES[row.status]}`}
-                        >
-                          {row.status}
-                        </span>
-                        <AppointmentActions row={row} />
-                      </div>
                     </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        <div className="mt-10">
-          <h2 className="mb-2 text-[13.5px] font-bold tracking-[0.02em] text-muted uppercase">
-            Blocked dates
-          </h2>
-          <div className="rounded-2xl bg-white p-4 shadow-[0_4px_16px_rgba(0,0,0,0.04)]">
-            <form action={blockDateAction} className="mb-4 flex flex-wrap items-end gap-2">
-              <div>
-                <label className="mb-1 block text-[12px] font-semibold text-ink">Date</label>
-                <input
-                  type="date"
-                  name="date"
-                  required
-                  min={today}
-                  className="rounded-lg border border-line px-2.5 py-2 font-[inherit] text-[13.5px]"
-                />
-              </div>
-              <div className="flex-1">
-                <label className="mb-1 block text-[12px] font-semibold text-ink">
-                  Reason (optional)
-                </label>
-                <input
-                  type="text"
-                  name="reason"
-                  placeholder="e.g. Public holiday"
-                  className="w-full rounded-lg border border-line px-2.5 py-2 font-[inherit] text-[13.5px]"
-                />
-              </div>
-              <button
-                type="submit"
-                className="rounded-lg bg-brand px-3.5 py-2 text-[13px] font-semibold text-white hover:bg-brand-dark"
-              >
-                Block
-              </button>
-            </form>
-
-            {upcomingBlocked.length === 0 ? (
-              <p className="text-[13px] text-muted">No upcoming blocked dates.</p>
-            ) : (
-              <div className="flex flex-col gap-1.5">
-                {upcomingBlocked.map((b) => (
-                  <div
-                    key={b.id}
-                    className="flex items-center justify-between rounded-lg border border-line px-3 py-2"
-                  >
-                    <div className="text-[13.5px] text-ink">
-                      <span className="font-semibold">{formatDateLabel(b.date)}</span>
-                      {b.reason && <span className="text-muted"> — {b.reason}</span>}
-                    </div>
-                    <form action={unblockDateAction}>
-                      <input type="hidden" name="id" value={b.id} />
-                      <button
-                        type="submit"
-                        className="text-[12px] font-semibold text-muted hover:text-ink"
+                    <div className="flex items-center gap-3">
+                      <span
+                        className={`rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${STATUS_STYLES[row.status]}`}
                       >
-                        Remove
-                      </button>
-                    </form>
+                        {row.status}
+                      </span>
+                      <AppointmentActions row={row} />
+                    </div>
                   </div>
                 ))}
               </div>
-            )}
-          </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="mt-8">
+        <h2 className="mb-2 flex items-center gap-1.5 text-xs font-semibold tracking-wide text-slate-500 uppercase">
+          <CalendarOff size={13} />
+          Blocked dates
+        </h2>
+        <div className="rounded-xl border border-slate-200 bg-white p-4">
+          <form action={blockDateAction} className="mb-4 flex flex-wrap items-end gap-2">
+            <div>
+              <label className="mb-1 block text-xs font-medium text-slate-600">Date</label>
+              <input
+                type="date"
+                name="date"
+                required
+                min={today}
+                className="rounded-md border border-slate-300 px-2.5 py-1.5 font-[inherit] text-sm text-slate-900"
+              />
+            </div>
+            <div className="flex-1">
+              <label className="mb-1 block text-xs font-medium text-slate-600">Reason (optional)</label>
+              <input
+                type="text"
+                name="reason"
+                placeholder="e.g. Public holiday"
+                className="w-full rounded-md border border-slate-300 px-2.5 py-1.5 font-[inherit] text-sm text-slate-900"
+              />
+            </div>
+            <button
+              type="submit"
+              className="rounded-md bg-brand px-3.5 py-1.5 text-sm font-medium text-white hover:bg-brand-dark"
+            >
+              Block
+            </button>
+          </form>
+
+          {upcomingBlocked.length === 0 ? (
+            <p className="text-sm text-slate-500">No upcoming blocked dates.</p>
+          ) : (
+            <div className="flex flex-col gap-1.5">
+              {upcomingBlocked.map((b) => (
+                <div
+                  key={b.id}
+                  className="flex items-center justify-between rounded-md border border-slate-200 px-3 py-2"
+                >
+                  <div className="text-sm text-slate-900">
+                    <span className="font-medium">{formatDateLabel(b.date)}</span>
+                    {b.reason && <span className="text-slate-500"> — {b.reason}</span>}
+                  </div>
+                  <form action={unblockDateAction}>
+                    <input type="hidden" name="id" value={b.id} />
+                    <button type="submit" className="text-xs font-medium text-slate-500 hover:text-slate-800">
+                      Remove
+                    </button>
+                  </form>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
-    </main>
+    </>
   );
 }
