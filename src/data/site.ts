@@ -2,11 +2,11 @@
 // "Assets" section for the real values to swap in before launch.
 
 export const contact = {
-  phone: "+1 (555) 123-4567",
-  phoneHref: "tel:+15551234567",
-  whatsappHref: "https://wa.me/15551234567",
+  phone: "+92 335 5552417",
+  phoneHref: "tel:+923355552417",
+  whatsappHref: "https://wa.me/+923355552417",
   email: "hello@smileup.clinic",
-  address: "221 Maple Grove Ave, Suite 4, Springfield",
+  address: "Canal Road, Thokar Niaz Baig, Lahore",
   mapEmbedSrc: "https://www.google.com/maps?q=Springfield&output=embed",
 };
 
