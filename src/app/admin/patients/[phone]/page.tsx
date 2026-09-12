@@ -3,21 +3,32 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, Pencil } from "lucide-react";
 import { getPatientDetail } from "@/lib/patients";
 import { formatDateLabel, formatPKR, formatTimeLabel } from "@/lib/format";
+import { PAGE_SIZE, parsePage, totalPagesFor } from "@/lib/pagination";
 import { STATUS_STYLES } from "../../_components/statusStyles";
+import { Pagination } from "../../_components/Pagination";
 
 export const dynamic = "force-dynamic";
 
 export default async function PatientDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ phone: string }>;
+  searchParams: Promise<{ page?: string }>;
 }) {
   const { phone: rawPhone } = await params;
   const phone = decodeURIComponent(rawPhone);
+  const page = parsePage((await searchParams).page);
   const detail = await getPatientDetail(phone);
   if (!detail) notFound();
 
   const { summary, visits } = detail;
+  // Same reasoning as the patients list: the summary stats above need the
+  // full visit history to be correct, so this is a post-fetch slice of
+  // an already-loaded array, not a smaller DB query — see docs/notes/30.
+  const totalPages = totalPagesFor(visits.length);
+  const safePage = Math.min(page, totalPages);
+  const pageVisits = visits.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
   return (
     <>
@@ -81,7 +92,7 @@ export default async function PatientDetailPage({
         Visit history
       </h3>
       <div className="divide-y divide-slate-200 rounded-xl border border-slate-200 bg-white">
-        {visits.map((v) => (
+        {pageVisits.map((v) => (
           <div key={v.id} className="flex items-center justify-between gap-3 px-4 py-3">
             <div className="flex items-center gap-4">
               <div className="w-[86px] shrink-0 text-[13px] font-medium text-slate-500">
@@ -117,6 +128,11 @@ export default async function PatientDetailPage({
           </div>
         ))}
       </div>
+      <Pagination
+        page={safePage}
+        totalPages={totalPages}
+        buildHref={(p) => `/admin/patients/${encodeURIComponent(phone)}?page=${p}`}
+      />
     </>
   );
 }

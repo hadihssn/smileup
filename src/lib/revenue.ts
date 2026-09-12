@@ -3,6 +3,7 @@ import { db } from "@/db";
 import { appointments, services } from "@/db/schema";
 import type { AppointmentRow } from "./appointments";
 import { monthBounds } from "./dateRange";
+import { PAGE_SIZE, totalPagesFor } from "./pagination";
 
 export function currentMonth(): string {
   return new Date().toISOString().slice(0, 7);
@@ -66,51 +67,57 @@ export interface RevenueSummary {
    * surfacing so the dentist notices unrecorded revenue rather than the
    * total silently looking lower than it should. */
   missingChargeCount: number;
+  page: number;
+  totalPages: number;
 }
 
-export async function getRevenueSummary(yearMonth: string): Promise<RevenueSummary> {
+export async function getRevenueSummary(yearMonth: string, page = 1): Promise<RevenueSummary> {
   const { start, end } = monthBounds(yearMonth);
   const previousMonth = shiftMonth(yearMonth, -1);
+  const monthFilter = and(
+    eq(appointments.status, "completed"),
+    gte(appointments.appointmentDate, start),
+    lt(appointments.appointmentDate, end),
+  );
 
-  const [current, previous, rows, missingChargeRows] = await Promise.all([
+  const [current, previous, [{ breakdownCount }], missingChargeRows] = await Promise.all([
     getMonthTotal(yearMonth),
     getMonthTotal(previousMonth),
-    db
-      .select({
-        id: appointments.id,
-        patientName: appointments.patientName,
-        patientPhone: appointments.patientPhone,
-        serviceId: appointments.serviceId,
-        serviceTitle: services.title,
-        date: appointments.appointmentDate,
-        time: appointments.appointmentTime,
-        status: appointments.status,
-        chargeAmount: appointments.chargeAmount,
-        isManualEntry: appointments.isManualEntry,
-        notes: appointments.notes,
-      })
-      .from(appointments)
-      .leftJoin(services, eq(appointments.serviceId, services.id))
-      .where(
-        and(
-          eq(appointments.status, "completed"),
-          gte(appointments.appointmentDate, start),
-          lt(appointments.appointmentDate, end),
-        ),
-      )
-      .orderBy(asc(appointments.appointmentDate), asc(appointments.appointmentTime)),
+    db.select({ breakdownCount: sql<number>`count(*)::int` }).from(appointments).where(monthFilter),
     db
       .select({ count: sql<string>`count(*)` })
       .from(appointments)
-      .where(
-        and(
-          eq(appointments.status, "completed"),
-          gte(appointments.appointmentDate, start),
-          lt(appointments.appointmentDate, end),
-          sql`${appointments.chargeAmount} is null`,
-        ),
-      ),
+      .where(and(monthFilter, sql`${appointments.chargeAmount} is null`)),
   ]);
+
+  const totalPages = totalPagesFor(breakdownCount);
+  const safePage = Math.min(Math.max(1, page), totalPages);
+
+  // The breakdown list (this page's rows) is paginated with LIMIT/OFFSET
+  // — it's a plain filtered/sorted list, not an aggregate, so only this
+  // page's rows are ever fetched. The totals above (getMonthTotal) are
+  // separate, always-unpaginated aggregate queries over the whole month —
+  // they must never be affected by which page of the breakdown is showing.
+  const rows = await db
+    .select({
+      id: appointments.id,
+      patientName: appointments.patientName,
+      patientPhone: appointments.patientPhone,
+      serviceId: appointments.serviceId,
+      serviceTitle: services.title,
+      date: appointments.appointmentDate,
+      time: appointments.appointmentTime,
+      status: appointments.status,
+      chargeAmount: appointments.chargeAmount,
+      isManualEntry: appointments.isManualEntry,
+      notes: appointments.notes,
+    })
+    .from(appointments)
+    .leftJoin(services, eq(appointments.serviceId, services.id))
+    .where(monthFilter)
+    .orderBy(asc(appointments.appointmentDate), asc(appointments.appointmentTime))
+    .limit(PAGE_SIZE)
+    .offset((safePage - 1) * PAGE_SIZE);
 
   const changePercent =
     previous.total > 0 ? ((current.total - previous.total) / previous.total) * 100 : null;
@@ -124,5 +131,7 @@ export async function getRevenueSummary(yearMonth: string): Promise<RevenueSumma
     changePercent,
     appointments: rows,
     missingChargeCount: Number(missingChargeRows[0]?.count ?? 0),
+    page: safePage,
+    totalPages,
   };
 }

@@ -7,18 +7,21 @@ import {
   shiftMonth,
 } from "@/lib/revenue";
 import { formatDateLabel, formatPKR, formatTimeLabel } from "@/lib/format";
+import { parsePage } from "@/lib/pagination";
 import { PageHeader } from "../_components/PageHeader";
+import { Pagination } from "../_components/Pagination";
 
 export const dynamic = "force-dynamic";
 
 export default async function RevenuePage({
   searchParams,
 }: {
-  searchParams: Promise<{ month?: string }>;
+  searchParams: Promise<{ month?: string; page?: string }>;
 }) {
-  const { month: requestedMonth } = await searchParams;
+  const { month: requestedMonth, page: requestedPage } = await searchParams;
   const month = requestedMonth && /^\d{4}-\d{2}$/.test(requestedMonth) ? requestedMonth : currentMonth();
-  const summary = await getRevenueSummary(month);
+  const page = parsePage(requestedPage);
+  const summary = await getRevenueSummary(month, page);
 
   const trendUp = summary.changePercent != null && summary.changePercent >= 0;
 
@@ -144,6 +147,11 @@ export default async function RevenuePage({
             ))}
           </div>
         )}
+        <Pagination
+          page={summary.page}
+          totalPages={summary.totalPages}
+          buildHref={(p) => `/admin/revenue?month=${month}&page=${p}`}
+        />
       </div>
     </>
   );

@@ -3,9 +3,11 @@ import { Plus, CalendarOff, Check, X, Pencil } from "lucide-react";
 import { updateAppointmentStatusAction, blockDateAction, unblockDateAction } from "./actions";
 import { getAppointments, type AppointmentView, type AppointmentRow } from "@/lib/appointments";
 import { getBlockedDates } from "@/lib/blockedDates";
+import { parsePage } from "@/lib/pagination";
 import { formatDateLabel, formatTimeLabel, formatPKR } from "@/lib/format";
 import { STATUS_STYLES } from "./_components/statusStyles";
 import { PageHeader } from "./_components/PageHeader";
+import { Pagination } from "./_components/Pagination";
 
 export const dynamic = "force-dynamic";
 
@@ -68,15 +70,19 @@ function AppointmentActions({ row }: { row: AppointmentRow }) {
 export default async function AdminPage({
   searchParams,
 }: {
-  searchParams: Promise<{ view?: string }>;
+  searchParams: Promise<{ view?: string; page?: string }>;
 }) {
-  const requestedView = (await searchParams).view;
+  const { view: requestedView, page: requestedPage } = await searchParams;
   const view: AppointmentView =
     requestedView === "today" || requestedView === "upcoming" || requestedView === "all"
       ? requestedView
       : "upcoming";
+  const page = parsePage(requestedPage);
 
-  const [rows, blocked] = await Promise.all([getAppointments(view), getBlockedDates()]);
+  const [{ rows, totalPages }, blocked] = await Promise.all([
+    getAppointments(view, page),
+    getBlockedDates(),
+  ]);
   const groups = groupByDate(rows);
   const today = new Date().toISOString().slice(0, 10);
   const upcomingBlocked = blocked.filter((b) => b.date >= today);
@@ -159,6 +165,8 @@ export default async function AdminPage({
           ))}
         </div>
       )}
+
+      <Pagination page={page} totalPages={totalPages} buildHref={(p) => `/admin?view=${view}&page=${p}`} />
 
       <div className="mt-8">
         <h2 className="mb-2 flex items-center gap-1.5 text-xs font-semibold tracking-wide text-slate-500 uppercase">

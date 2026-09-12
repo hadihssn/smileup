@@ -4,7 +4,9 @@ import { getPatientsOverview } from "@/lib/patients";
 import { getServices } from "@/lib/services";
 import { currentMonth, formatMonthLabel } from "@/lib/revenue";
 import { formatDateLabel, formatPKR } from "@/lib/format";
+import { PAGE_SIZE, parsePage, totalPagesFor } from "@/lib/pagination";
 import { PageHeader } from "../_components/PageHeader";
+import { Pagination } from "../_components/Pagination";
 
 export const dynamic = "force-dynamic";
 
@@ -13,11 +15,12 @@ type PatientFilter = "all" | "overdue";
 export default async function PatientsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ filter?: string; q?: string; service?: string }>;
+  searchParams: Promise<{ filter?: string; q?: string; service?: string; page?: string }>;
 }) {
-  const { filter: requestedFilter, q, service: serviceId } = await searchParams;
+  const { filter: requestedFilter, q, service: serviceId, page: requestedPage } = await searchParams;
   const filter: PatientFilter = requestedFilter === "overdue" ? "overdue" : "all";
   const query = q?.trim() ?? "";
+  const page = parsePage(requestedPage);
 
   const month = currentMonth();
   const [{ patients, stats }, allServices] = await Promise.all([
@@ -25,6 +28,15 @@ export default async function PatientsPage({
     getServices(),
   ]);
 
+  // Every patient's stats (last visit, lifetime revenue, overdue status)
+  // depend on their *entire* appointment history, so the aggregation
+  // above always has to scan every appointment — there's no DB-level
+  // LIMIT that would make that scan itself cheaper (see the note on this
+  // in patients.ts / docs/notes/30). What we can still do is only ever
+  // send/render one page of the *resulting* patient list, which is what
+  // this slice does — a real reduction in DOM size and page weight, just
+  // not a reduction in query cost the way appointments/revenue's
+  // pagination is.
   let visible = filter === "overdue" ? patients.filter((p) => p.isOverdueForRecall) : patients;
   if (query) {
     const q2 = query.toLowerCase();
@@ -36,6 +48,18 @@ export default async function PatientsPage({
     visible = visible.filter((p) => p.serviceIdsReceived.includes(serviceId));
   }
   const overdueCount = patients.filter((p) => p.isOverdueForRecall).length;
+
+  const totalPages = totalPagesFor(visible.length);
+  const safePage = Math.min(page, totalPages);
+  const pageRows = visible.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+
+  const paramsFor = (extra: Record<string, string>) =>
+    new URLSearchParams({
+      filter,
+      ...(query && { q: query }),
+      ...(serviceId && { service: serviceId }),
+      ...extra,
+    }).toString();
 
   return (
     <>
@@ -68,7 +92,7 @@ export default async function PatientsPage({
 
       <div className="mb-4 flex gap-1 rounded-lg bg-slate-100 p-1 text-sm font-medium">
         <Link
-          href={`/admin/patients?${new URLSearchParams({ filter: "all", ...(query && { q: query }), ...(serviceId && { service: serviceId }) })}`}
+          href={`/admin/patients?${paramsFor({ filter: "all" })}`}
           className={`rounded-md px-3 py-1.5 transition-colors ${
             filter === "all" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-800"
           }`}
@@ -76,7 +100,7 @@ export default async function PatientsPage({
           All ({patients.length})
         </Link>
         <Link
-          href={`/admin/patients?${new URLSearchParams({ filter: "overdue", ...(query && { q: query }), ...(serviceId && { service: serviceId }) })}`}
+          href={`/admin/patients?${paramsFor({ filter: "overdue" })}`}
           className={`rounded-md px-3 py-1.5 transition-colors ${
             filter === "overdue" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-800"
           }`}
@@ -147,7 +171,7 @@ export default async function PatientsPage({
         </div>
       ) : (
         <div className="divide-y divide-slate-200 rounded-xl border border-slate-200 bg-white">
-          {visible.map((p) => (
+          {pageRows.map((p) => (
             <Link
               key={p.phone}
               href={`/admin/patients/${encodeURIComponent(p.phone)}`}
@@ -182,6 +206,11 @@ export default async function PatientsPage({
           ))}
         </div>
       )}
+      <Pagination
+        page={safePage}
+        totalPages={totalPages}
+        buildHref={(p) => `/admin/patients?${paramsFor({ page: String(p) })}`}
+      />
     </>
   );
 }
