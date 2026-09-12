@@ -2,6 +2,7 @@ import Link from "next/link";
 import { auth } from "@/lib/auth/server";
 import { redirect } from "next/navigation";
 import { getPatientsOverview } from "@/lib/patients";
+import { getServices } from "@/lib/services";
 import { currentMonth, formatMonthLabel } from "@/lib/revenue";
 import { formatDateLabel, formatPKR } from "@/lib/format";
 import { AdminHeader } from "../_components/AdminHeader";
@@ -13,17 +14,31 @@ type PatientFilter = "all" | "overdue";
 export default async function PatientsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ filter?: string }>;
+  searchParams: Promise<{ filter?: string; q?: string; service?: string }>;
 }) {
   const { data: session } = await auth.getSession();
   if (!session?.user) redirect("/auth/sign-in");
 
-  const { filter: requestedFilter } = await searchParams;
+  const { filter: requestedFilter, q, service: serviceId } = await searchParams;
   const filter: PatientFilter = requestedFilter === "overdue" ? "overdue" : "all";
+  const query = q?.trim() ?? "";
 
   const month = currentMonth();
-  const { patients, stats } = await getPatientsOverview(month);
-  const visible = filter === "overdue" ? patients.filter((p) => p.isOverdueForRecall) : patients;
+  const [{ patients, stats }, allServices] = await Promise.all([
+    getPatientsOverview(month),
+    getServices(),
+  ]);
+
+  let visible = filter === "overdue" ? patients.filter((p) => p.isOverdueForRecall) : patients;
+  if (query) {
+    const q2 = query.toLowerCase();
+    visible = visible.filter(
+      (p) => p.name.toLowerCase().includes(q2) || p.phone.toLowerCase().includes(q2),
+    );
+  }
+  if (serviceId) {
+    visible = visible.filter((p) => p.serviceIdsReceived.includes(serviceId));
+  }
   const overdueCount = patients.filter((p) => p.isOverdueForRecall).length;
 
   return (
@@ -60,9 +75,9 @@ export default async function PatientsPage({
           </div>
         </div>
 
-        <div className="mb-6 flex gap-2">
+        <div className="mb-4 flex gap-2">
           <Link
-            href="/admin/patients?filter=all"
+            href={`/admin/patients?${new URLSearchParams({ filter: "all", ...(query && { q: query }), ...(serviceId && { service: serviceId }) })}`}
             className={`rounded-full px-4 py-2 text-[13.5px] font-semibold transition-colors ${
               filter === "all"
                 ? "bg-brand text-white"
@@ -72,7 +87,7 @@ export default async function PatientsPage({
             All ({patients.length})
           </Link>
           <Link
-            href="/admin/patients?filter=overdue"
+            href={`/admin/patients?${new URLSearchParams({ filter: "overdue", ...(query && { q: query }), ...(serviceId && { service: serviceId }) })}`}
             className={`rounded-full px-4 py-2 text-[13.5px] font-semibold transition-colors ${
               filter === "overdue"
                 ? "bg-brand text-white"
@@ -82,6 +97,43 @@ export default async function PatientsPage({
             Overdue for recall ({overdueCount})
           </Link>
         </div>
+
+        <form className="mb-6 flex flex-wrap gap-2" action="/admin/patients">
+          <input type="hidden" name="filter" value={filter} />
+          <input
+            type="text"
+            name="q"
+            defaultValue={query}
+            placeholder="Search by name or phone…"
+            className="min-w-[220px] flex-1 rounded-lg border border-line bg-white px-3.5 py-2.5 font-[inherit] text-[13.5px]"
+          />
+          <select
+            name="service"
+            defaultValue={serviceId ?? ""}
+            className="rounded-lg border border-line bg-white px-3.5 py-2.5 font-[inherit] text-[13.5px]"
+          >
+            <option value="">All services</option>
+            {allServices.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.title}
+              </option>
+            ))}
+          </select>
+          <button
+            type="submit"
+            className="rounded-lg bg-brand px-4 py-2.5 text-[13.5px] font-semibold text-white hover:bg-brand-dark"
+          >
+            Search
+          </button>
+          {(query || serviceId) && (
+            <Link
+              href={`/admin/patients?filter=${filter}`}
+              className="rounded-lg border border-line bg-white px-4 py-2.5 text-[13.5px] font-semibold text-ink hover:bg-section"
+            >
+              Clear
+            </Link>
+          )}
+        </form>
 
         {filter === "overdue" && overdueCount > 0 && (
           <div className="mb-6 rounded-xl bg-amber-50 px-4 py-3 text-[13px] text-amber-800">
@@ -93,7 +145,11 @@ export default async function PatientsPage({
         {visible.length === 0 ? (
           <div className="rounded-2xl bg-white p-8 text-center shadow-[0_8px_30px_rgba(0,0,0,0.06)]">
             <p className="text-[14.5px] text-muted">
-              {filter === "overdue" ? "No one is overdue for a recall right now." : "No patients yet."}
+              {query || serviceId
+                ? "No patients match that search."
+                : filter === "overdue"
+                  ? "No one is overdue for a recall right now."
+                  : "No patients yet."}
             </p>
           </div>
         ) : (

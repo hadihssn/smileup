@@ -32,6 +32,7 @@ interface PatientAppointmentRow {
   date: string;
   time: string;
   status: AppointmentStatus;
+  serviceId: string | null;
   serviceTitle: string | null;
   chargeAmount: number | null;
   isManualEntry: boolean;
@@ -51,6 +52,7 @@ async function getAllAppointmentsForPatients(): Promise<PatientAppointmentRow[]>
       date: appointments.appointmentDate,
       time: appointments.appointmentTime,
       status: appointments.status,
+      serviceId: appointments.serviceId,
       serviceTitle: services.title,
       chargeAmount: appointments.chargeAmount,
       isManualEntry: appointments.isManualEntry,
@@ -75,12 +77,18 @@ export interface PatientSummary {
    * completed visits are never "overdue": there's nothing to recall them
    * for yet. */
   isOverdueForRecall: boolean;
+  /** Every distinct service this patient has ever completed a visit for —
+   * not just their most recent one. Filtering "who's had veneers" should
+   * find someone whose last visit was a cleaning but who had veneers done
+   * two visits ago, not just whoever's *most recent* treatment matches. */
+  serviceIdsReceived: string[];
 }
 
 function buildPatientSummaries(rows: PatientAppointmentRow[]): PatientSummary[] {
   const today = todayStr();
   const recallCutoff = daysAgoStr(RECALL_WINDOW_DAYS);
   const map = new Map<string, PatientSummary>();
+  const serviceSets = new Map<string, Set<string>>();
 
   for (const row of rows) {
     let p = map.get(row.patientPhone);
@@ -95,8 +103,10 @@ function buildPatientSummaries(rows: PatientAppointmentRow[]): PatientSummary[] 
         lifetimeRevenue: 0,
         upcomingDate: null,
         isOverdueForRecall: false,
+        serviceIdsReceived: [],
       };
       map.set(row.patientPhone, p);
+      serviceSets.set(row.patientPhone, new Set());
     }
     p.name = row.patientName; // rows are ascending, so this ends up as the latest name on file
 
@@ -106,6 +116,7 @@ function buildPatientSummaries(rows: PatientAppointmentRow[]): PatientSummary[] 
       p.lastVisitDate = row.date;
       p.lastTreatment = row.serviceTitle;
       if (row.chargeAmount != null) p.lifetimeRevenue += row.chargeAmount;
+      if (row.serviceId) serviceSets.get(row.patientPhone)!.add(row.serviceId);
     }
     if ((row.status === "pending" || row.status === "confirmed") && row.date >= today) {
       if (!p.upcomingDate || row.date < p.upcomingDate) p.upcomingDate = row.date;
@@ -113,6 +124,9 @@ function buildPatientSummaries(rows: PatientAppointmentRow[]): PatientSummary[] 
   }
 
   const list = [...map.values()];
+  for (const p of list) {
+    p.serviceIdsReceived = [...(serviceSets.get(p.phone) ?? [])];
+  }
   for (const p of list) {
     p.isOverdueForRecall = !!p.lastVisitDate && p.lastVisitDate < recallCutoff && !p.upcomingDate;
   }
