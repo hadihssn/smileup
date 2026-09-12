@@ -19,7 +19,7 @@ export function AdminSidebar({ email }: { email?: string }) {
   const pathname = usePathname();
 
   return (
-    <aside className="flex h-screen w-60 shrink-0 flex-col border-r border-slate-200 bg-white">
+    <aside className="sticky top-0 flex h-screen w-60 shrink-0 flex-col border-r border-slate-200 bg-white">
       <div className="flex items-center gap-2 px-5 py-5">
         <div className="flex h-7 w-7 items-center justify-center rounded-md bg-brand text-sm font-bold text-white">
           S
